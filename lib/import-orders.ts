@@ -167,10 +167,42 @@ export function parseCSV(csvText: string): CSVOrderRow[] {
       }
     }
 
-    const order: Record<string, string> = {};
+    const order: Partial<CSVOrderRow> = {
+      order_id: "",
+      customer_id: "",
+      details: "",
+      status: "",
+      delivery_date_time: "",
+      photos: "",
+      pickup_delivery: "",
+      payment_status: "",
+      price: "",
+    };
+
     headers.forEach((header, index) => {
       const headerKey = header.toLowerCase().trim();
-      order[headerKey] = values[index]?.trim() || "";
+      const value = values[index]?.trim() || "";
+      
+      // Map headers to CSVOrderRow fields
+      if (headerKey === "order_id" || headerKey === "order id") {
+        order.order_id = value;
+      } else if (headerKey === "customer_id" || headerKey === "customer id") {
+        order.customer_id = value;
+      } else if (headerKey === "details") {
+        order.details = value;
+      } else if (headerKey === "status") {
+        order.status = value;
+      } else if (headerKey === "delivery_date_time" || headerKey === "delivery date time" || headerKey === "delivery_date" || headerKey === "delivery date") {
+        order.delivery_date_time = value;
+      } else if (headerKey === "photos" || headerKey === "photo") {
+        order.photos = value;
+      } else if (headerKey === "pickup_delivery" || headerKey === "pickup delivery") {
+        order.pickup_delivery = value;
+      } else if (headerKey === "payment_status" || headerKey === "payment status") {
+        order.payment_status = value;
+      } else if (headerKey === "price") {
+        order.price = value;
+      }
     });
 
     // Only add if order_id exists
@@ -255,17 +287,49 @@ export function parseOrderData(tableData: string): CSVOrderRow[] {
       values.push("");
     }
 
-    const order: Record<string, string> = {};
+    const order: Partial<CSVOrderRow> = {
+      order_id: "",
+      customer_id: "",
+      details: "",
+      status: "",
+      delivery_date_time: "",
+      photos: "",
+      pickup_delivery: "",
+      payment_status: "",
+      price: "",
+    };
+
     headers.forEach((header, index) => {
       let value = values[index]?.trim() || "";
       if (value.startsWith('"') && value.endsWith('"')) {
         value = value.slice(1, -1);
       }
-      order[header] = value;
+      
+      const headerKey = header.toLowerCase().trim();
+      // Map headers to CSVOrderRow fields (handles both "Order ID" and "order_id" formats)
+      if (headerKey === "order_id" || headerKey === "order id") {
+        order.order_id = value;
+      } else if (headerKey === "customer_id" || headerKey === "customer id") {
+        order.customer_id = value;
+      } else if (headerKey === "details") {
+        order.details = value;
+      } else if (headerKey === "status") {
+        order.status = value;
+      } else if (headerKey === "delivery_date_time" || headerKey === "delivery date time" || headerKey === "delivery_date" || headerKey === "delivery date") {
+        order.delivery_date_time = value;
+      } else if (headerKey === "photos" || headerKey === "photo") {
+        order.photos = value;
+      } else if (headerKey === "pickup_delivery" || headerKey === "pickup delivery") {
+        order.pickup_delivery = value;
+      } else if (headerKey === "payment_status" || headerKey === "payment status") {
+        order.payment_status = value;
+      } else if (headerKey === "price") {
+        order.price = value;
+      }
     });
 
-    if (order["Order ID"] && order["Order ID"].trim() !== "") {
-      orders.push(order);
+    if (order.order_id && order.order_id.trim() !== "") {
+      orders.push(order as CSVOrderRow);
     }
   }
 

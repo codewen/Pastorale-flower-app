@@ -1,12 +1,13 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getOrderById } from "@/lib/supabase/orders";
 import { Order } from "@/types/order";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { Edit } from "lucide-react";
+import Image from "next/image";
 
 export default function ViewOrderPage() {
   const params = useParams();
@@ -15,21 +16,21 @@ export default function ViewOrderPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadOrder();
-  }, [orderId]);
-
-  const loadOrder = async () => {
+  const loadOrder = useCallback(async () => {
     try {
       setIsLoading(true);
       const orderData = await getOrderById(orderId);
       setOrder(orderData);
     } catch (error) {
-      console.error("Failed to load order:", error);
+      // Error is handled by the UI (shows "Order not found")
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orderId]);
+
+  useEffect(() => {
+    loadOrder();
+  }, [loadOrder]);
 
   if (isLoading) {
     return (
@@ -71,10 +72,12 @@ export default function ViewOrderPage() {
                   key={index}
                   className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300"
                 >
-                  <img
+                  <Image
                     src={photoUrl}
                     alt={`Photo ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    unoptimized
                   />
                 </div>
               ))}

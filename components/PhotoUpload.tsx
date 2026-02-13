@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Camera, X, Plus } from "lucide-react";
+import Image from "next/image";
 
 interface PhotoUploadProps {
   photos?: string[]; // Existing photo URLs
@@ -82,10 +83,12 @@ export function PhotoUpload({
         <div className="grid grid-cols-2 gap-4">
           {existingPhotos.map((photoUrl, index) => (
             <div key={`existing-${index}`} className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300">
-              <img
+              <Image
                 src={photoUrl}
                 alt={`Photo ${index + 1}`}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
+                unoptimized
               />
               <button
                 type="button"
@@ -98,10 +101,12 @@ export function PhotoUpload({
           ))}
           {newPreviews.map((preview, index) => (
             <div key={`new-${index}`} className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300">
-              <img
+              <Image
                 src={preview}
                 alt={`New photo ${index + 1}`}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
+                unoptimized
               />
               <button
                 type="button"

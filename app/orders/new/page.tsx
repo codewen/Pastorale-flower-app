@@ -17,8 +17,8 @@ export default function NewOrderPage() {
       await createOrder(formData);
       router.push("/orders");
     } catch (error) {
-      console.error("Failed to create order:", error);
-      alert("Failed to create order. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Failed to create order. Please try again.";
+      alert(errorMessage);
     }
   };
 

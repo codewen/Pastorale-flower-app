@@ -55,7 +55,7 @@ function parseDate(dateString: string): string {
     
     return formatted;
   } catch (error) {
-    console.warn(`Failed to parse date: ${dateString}`, error);
+    // Silently fallback to current date if parsing fails
     const now = new Date();
     return now.toISOString().replace("T", " ").replace(/\.\d{3}Z$/, "+00");
   }
@@ -93,10 +93,10 @@ export async function importOrdersFromCSV(csvData: CSVOrderRow[]): Promise<void>
         order_id: row.order_id.trim(),
         customer_id: row.customer_id || "",
         details: row.details || null,
-        status: (row.status as any) || "Done",
+        status: (row.status as "Ordered" | "Ready" | "Done") || "Done",
         delivery_date_time: parseDate(row.delivery_date_time),
-        pickup_delivery: (row.pickup_delivery as any) || "Pickup",
-        payment_status: (row.payment_status as any) || "Paid",
+        pickup_delivery: (row.pickup_delivery as "Pickup" | "Delivery") || "Pickup",
+        payment_status: (row.payment_status as "Paid" | "Unpaid" | "Pending") || "Paid",
         price: parsePrice(row.price),
         photos: photos,
       });
@@ -106,15 +106,15 @@ export async function importOrdersFromCSV(csvData: CSVOrderRow[]): Promise<void>
       } else {
         successCount++;
       }
-    } catch (error: any) {
-      errors.push(`Error importing order ${row.order_id}: ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      errors.push(`Error importing order ${row.order_id}: ${errorMessage}`);
     }
   }
 
   if (errors.length > 0) {
-    console.error("Import errors:", errors);
     throw new Error(
-      `Failed to import ${errors.length} orders. ${successCount} orders imported successfully. See console for details.`
+      `Failed to import ${errors.length} orders. ${successCount} orders imported successfully. Errors: ${errors.slice(0, 5).join("; ")}${errors.length > 5 ? ` and ${errors.length - 5} more...` : ""}`
     );
   }
 }
@@ -167,7 +167,7 @@ export function parseCSV(csvText: string): CSVOrderRow[] {
       }
     }
 
-    const order: any = {};
+    const order: Record<string, string> = {};
     headers.forEach((header, index) => {
       const headerKey = header.toLowerCase().trim();
       order[headerKey] = values[index]?.trim() || "";
@@ -216,18 +216,18 @@ function parseCSVLine(line: string): string[] {
 }
 
 // Legacy function for backward compatibility
-export async function importOrders(ordersData: any[]): Promise<void> {
+export async function importOrders(ordersData: CSVOrderRow[]): Promise<void> {
   // This is for the old format, convert if needed
-  return importOrdersFromCSV(ordersData as CSVOrderRow[]);
+  return importOrdersFromCSV(ordersData);
 }
 
 // Legacy parser for tab-separated data
-export function parseOrderData(tableData: string): any[] {
+export function parseOrderData(tableData: string): CSVOrderRow[] {
   const lines = tableData.trim().split("\n");
   if (lines.length < 2) return [];
 
   const headers = lines[0].split("\t").map((h) => h.trim());
-  const orders: any[] = [];
+  const orders: CSVOrderRow[] = [];
 
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -255,7 +255,7 @@ export function parseOrderData(tableData: string): any[] {
       values.push("");
     }
 
-    const order: any = {};
+    const order: Record<string, string> = {};
     headers.forEach((header, index) => {
       let value = values[index]?.trim() || "";
       if (value.startsWith('"') && value.endsWith('"')) {

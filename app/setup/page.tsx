@@ -51,7 +51,7 @@ export default function SetupPage() {
                 <ol className="list-decimal list-inside space-y-2 text-gray-700">
                   <li>Go to <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">supabase.com</a></li>
                   <li>Sign up or log in to your account</li>
-                  <li>Click "New Project"</li>
+                  <li>Click &quot;New Project&quot;</li>
                   <li>Fill in your project details (name, database password, region)</li>
                   <li>Wait for the project to be created (takes 1-2 minutes)</li>
                 </ol>
@@ -64,11 +64,11 @@ export default function SetupPage() {
               >
                 <ol className="list-decimal list-inside space-y-2 text-gray-700">
                   <li>In your Supabase project dashboard, go to Settings (gear icon)</li>
-                  <li>Click on "API" in the left sidebar</li>
+                  <li>Click on &quot;API&quot; in the left sidebar</li>
                   <li>Copy the following values:
                     <ul className="list-disc list-inside ml-6 mt-2 space-y-1">
-                      <li><strong>Project URL</strong> (under "Project URL")</li>
-                      <li><strong>anon/public key</strong> (under "Project API keys")</li>
+                      <li><strong>Project URL</strong> (under &quot;Project URL&quot;)</li>
+                      <li><strong>anon/public key</strong> (under &quot;Project API keys&quot;)</li>
                     </ul>
                   </li>
                 </ol>
@@ -142,10 +142,10 @@ CREATE POLICY "Allow all operations" ON orders
               >
                 <ol className="list-decimal list-inside space-y-2 text-gray-700">
                   <li>In your Supabase dashboard, go to Storage</li>
-                  <li>Click "New bucket"</li>
+                  <li>Click &quot;New bucket&quot;</li>
                   <li>Name it: <code className="bg-gray-100 px-2 py-1 rounded">order-photos</code></li>
-                  <li>Make it <strong>public</strong> (toggle the "Public bucket" switch)</li>
-                  <li>Click "Create bucket"</li>
+                  <li>Make it <strong>public</strong> (toggle the &quot;Public bucket&quot; switch)</li>
+                  <li>Click &quot;Create bucket&quot;</li>
                 </ol>
               </Step>
 

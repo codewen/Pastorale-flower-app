@@ -75,7 +75,18 @@ export async function updateOrder(
   id: string,
   formData: OrderFormData
 ): Promise<Order> {
-  const updateData: any = {
+  const updateData: {
+    customer_id: string;
+    details: string | null;
+    status: string;
+    delivery_date_time: string;
+    pickup_delivery: string;
+    payment_status: string;
+    price: number | null;
+    updated_at: string;
+    photos?: string[];
+    order_id?: string;
+  } = {
     customer_id: formData.customer_id,
     details: formData.details || null,
     status: formData.status,

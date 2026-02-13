@@ -39,8 +39,9 @@ export default function ImportPage() {
       await importOrdersFromCSV(orders);
 
       setMessage(`Successfully imported ${orders.length} orders!`);
-    } catch (error: any) {
-      setMessage(`Import failed: ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setMessage(`Import failed: ${errorMessage}`);
     } finally {
       setIsImporting(false);
     }

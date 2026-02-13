@@ -18,6 +18,7 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Ordered");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     loadOrders();
@@ -38,7 +39,8 @@ export default function OrdersPage() {
       setOrders(allOrders);
       setFilteredOrders(allOrders);
     } catch (error) {
-      console.error("Failed to load orders:", error);
+      // Error is handled silently, user can retry
+      setMessage("Failed to load orders. Please refresh the page.");
     } finally {
       setIsLoading(false);
     }
@@ -99,6 +101,11 @@ export default function OrdersPage() {
 
       {/* Orders Table */}
       <main className="p-4">
+        {message && (
+          <div className="mb-4 p-4 rounded bg-red-100 text-red-800">
+            {message}
+          </div>
+        )}
         {isLoading ? (
           <div className="text-center py-12 text-gray-500">Loading orders...</div>
         ) : (

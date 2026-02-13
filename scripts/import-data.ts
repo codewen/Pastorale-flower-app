@@ -8,6 +8,7 @@ async function main() {
   const dataFilePath = args[0];
 
   if (!dataFilePath) {
+    // eslint-disable-next-line no-console
     console.error("Usage: npx tsx scripts/import-data.ts <path-to-data-file>");
     process.exit(1);
   }
@@ -17,11 +18,15 @@ async function main() {
     const fileContent = fs.readFileSync(filePath, "utf-8");
     const orders = parseOrderData(fileContent);
 
+    // eslint-disable-next-line no-console
     console.log(`Parsed ${orders.length} orders. Starting import...`);
     await importOrders(orders);
+    // eslint-disable-next-line no-console
     console.log(`Successfully imported ${orders.length} orders!`);
-  } catch (error: any) {
-    console.error("Import failed:", error.message);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    // eslint-disable-next-line no-console
+    console.error("Import failed:", errorMessage);
     process.exit(1);
   }
 }

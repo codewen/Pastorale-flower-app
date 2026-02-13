@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { OrderForm } from "@/components/OrderForm";
 import { getOrderById, updateOrder } from "@/lib/supabase/orders";
 import { Order, OrderFormData } from "@/types/order";
@@ -13,22 +13,22 @@ export default function EditOrderPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadOrder();
-  }, [orderId]);
-
-  const loadOrder = async () => {
+  const loadOrder = useCallback(async () => {
     try {
       setIsLoading(true);
       const orderData = await getOrderById(orderId);
       setOrder(orderData);
     } catch (error) {
-      console.error("Failed to load order:", error);
-      alert("Failed to load order. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Failed to load order. Please try again.";
+      alert(errorMessage);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orderId]);
+
+  useEffect(() => {
+    loadOrder();
+  }, [loadOrder]);
 
   const handleSubmit = async (formData: OrderFormData) => {
     try {
@@ -39,8 +39,8 @@ export default function EditOrderPage() {
       await updateOrder(orderId, formData);
       router.push("/orders");
     } catch (error) {
-      console.error("Failed to update order:", error);
-      alert("Failed to update order. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Failed to update order. Please try again.";
+      alert(errorMessage);
     }
   };
 

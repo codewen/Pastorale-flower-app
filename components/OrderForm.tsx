@@ -223,7 +223,7 @@ export function OrderForm({
               status: e.target.value as OrderStatus,
             }))
           }
-          className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+          className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
         >
           <option value="Ordered">Ordered</option>
           <option value="Ready">Ready</option>

@@ -68,7 +68,7 @@ export function PhotoUpload({
   const hasPhotos = allPhotos.length > 0;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 text-gray-900">
       <label className="text-sm font-medium">{label}</label>
       <input
         ref={fileInputRef}
@@ -131,7 +131,7 @@ export function PhotoUpload({
         </div>
       ) : (
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-          <Camera className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+          <Camera className="h-12 w-12 mx-auto text-gray-500 mb-4" />
           <Button
             type="button"
             variant="outline"

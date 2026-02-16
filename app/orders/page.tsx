@@ -3,19 +3,22 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { OrderTable } from "@/components/OrderTable";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getOrders } from "@/lib/supabase/orders";
-import { Order } from "@/types/order";
+import { Order, OrderStatus, PickupDelivery } from "@/types/order";
 import { Plus, Search, RefreshCw } from "lucide-react";
 
-type StatusFilter = "Ordered" | "Ready" | "Done" | "All";
+type PickupDeliveryFilter = PickupDelivery | "All";
+
+const ORDER_STATUSES: OrderStatus[] = ["Ordered", "Ready", "Done"];
 
 export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("Ordered");
+  const [statusFilter, setStatusFilter] = useState<OrderStatus[]>([]);
+  const [pickupDeliveryFilter, setPickupDeliveryFilter] =
+    useState<PickupDeliveryFilter>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -26,11 +29,16 @@ export default function OrdersPage() {
 
   useEffect(() => {
     let filtered = orders;
-    if (statusFilter !== "All") {
-      filtered = filtered.filter((order) => order.status === statusFilter);
+    if (statusFilter.length > 0) {
+      filtered = filtered.filter((order) => statusFilter.includes(order.status));
+    }
+    if (pickupDeliveryFilter !== "All") {
+      filtered = filtered.filter(
+        (order) => order.pickup_delivery === pickupDeliveryFilter
+      );
     }
     setFilteredOrders(filtered);
-  }, [orders, statusFilter]);
+  }, [orders, statusFilter, pickupDeliveryFilter]);
 
   const loadOrders = async () => {
     try {
@@ -39,16 +47,19 @@ export default function OrdersPage() {
       setOrders(allOrders);
       setFilteredOrders(allOrders);
     } catch (error) {
-      // Error is handled silently, user can retry
       setMessage("Failed to load orders. Please refresh the page.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleStatusFilter = (status: StatusFilter) => {
-    setStatusFilter(status);
+  const toggleStatus = (status: OrderStatus) => {
+    setStatusFilter((prev) =>
+      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
+    );
   };
+
+  const clearStatusFilter = () => setStatusFilter([]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -82,21 +93,52 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Status Tabs */}
-      <div className="flex border-b border-gray-200">
-        {(["Ordered", "Ready", "Done"] as const).map((status) => (
+      {/* Filters: status (multi-select) + pickup/delivery */}
+      <div className="p-4 border-b border-gray-200 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-gray-500 mr-1">Status</span>
           <button
-            key={status}
-            onClick={() => handleStatusFilter(status)}
-            className={`flex-1 py-3 text-center font-medium text-sm transition-colors ${
-              statusFilter === status
-                ? "border-b-2 border-blue-600 text-blue-600"
-                : "text-gray-600 hover:text-gray-900"
+            onClick={clearStatusFilter}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              statusFilter.length === 0
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
-            {status}
+            All
           </button>
-        ))}
+          {ORDER_STATUSES.map((status) => (
+            <button
+              key={status}
+              onClick={() => toggleStatus(status)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                statusFilter.includes(status)
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-gray-500 mr-1">
+            Pickup/Delivery
+          </span>
+          {(["All", "Pickup", "Delivery"] as const).map((value) => (
+            <button
+              key={value}
+              onClick={() => setPickupDeliveryFilter(value)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                pickupDeliveryFilter === value
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {value}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Orders Table */}
@@ -126,30 +168,25 @@ export default function OrdersPage() {
             <span className="text-xs font-medium">New Order</span>
           </button>
           <div className="flex gap-8">
-            {(["Order", "Ready", "Done"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => {
-                  if (tab === "Order") {
-                    handleStatusFilter("Ordered");
-                  } else {
-                    handleStatusFilter(tab as StatusFilter);
-                  }
-                }}
-                className={`flex flex-col items-center gap-1 ${
-                  (tab === "Order" && statusFilter === "Ordered") ||
-                  (tab === statusFilter)
-                    ? "text-blue-600"
-                    : "text-gray-500"
-                }`}
-              >
-                <span className="text-xs font-medium">{tab}</span>
-                {(tab === "Order" && statusFilter === "Ordered") ||
-                (tab === statusFilter) ? (
-                  <div className="h-0.5 w-8 bg-blue-600" />
-                ) : null}
-              </button>
-            ))}
+            {(["Order", "Ready", "Done"] as const).map((tab) => {
+              const status: OrderStatus =
+                tab === "Order" ? "Ordered" : (tab as OrderStatus);
+              const isActive = statusFilter.includes(status);
+              return (
+                <button
+                  key={tab}
+                  onClick={() => toggleStatus(status)}
+                  className={`flex flex-col items-center gap-1 ${
+                    isActive ? "text-blue-600" : "text-gray-500"
+                  }`}
+                >
+                  <span className="text-xs font-medium">{tab}</span>
+                  {isActive ? (
+                    <div className="h-0.5 w-8 bg-blue-600" />
+                  ) : null}
+                </button>
+              );
+            })}
           </div>
         </div>
       </footer>

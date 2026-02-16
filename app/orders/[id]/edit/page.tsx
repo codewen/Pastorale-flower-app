@@ -12,6 +12,7 @@ export default function EditOrderPage() {
   const orderId = params.id as string;
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   const loadOrder = useCallback(async () => {
     try {
@@ -32,6 +33,7 @@ export default function EditOrderPage() {
 
   const handleSubmit = async (formData: OrderFormData) => {
     try {
+      setIsSaving(true);
       // Convert datetime-local to ISO string
       const dateTime = new Date(formData.delivery_date_time);
       formData.delivery_date_time = dateTime.toISOString();
@@ -41,6 +43,8 @@ export default function EditOrderPage() {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to update order. Please try again.";
       alert(errorMessage);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -85,6 +89,7 @@ export default function EditOrderPage() {
         existingPhotos={order.photos || []}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
+        isLoading={isSaving}
       />
     </div>
   );

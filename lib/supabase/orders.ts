@@ -48,6 +48,12 @@ export async function createOrder(formData: OrderFormData): Promise<Order> {
   // Generate order_id if not provided
   const orderId = formData.order_id || generateOrderId();
 
+  // Ensure price is a number or null (avoid sending NaN)
+  const price =
+    formData.price != null && Number.isFinite(formData.price)
+      ? formData.price
+      : null;
+
   const { data, error } = await supabase
     .from("orders")
     .insert({
@@ -58,7 +64,7 @@ export async function createOrder(formData: OrderFormData): Promise<Order> {
       delivery_date_time: formData.delivery_date_time,
       pickup_delivery: formData.pickup_delivery,
       payment_status: formData.payment_status || "Pending",
-      price: formData.price,
+      price,
       photos: photoUrls,
     })
     .select()

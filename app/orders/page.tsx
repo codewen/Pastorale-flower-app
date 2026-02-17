@@ -70,9 +70,10 @@ export default function OrdersPage() {
     }
   };
 
-  const toggleStatus = (status: OrderStatus) => {
+  const selectSingleStatus = (status: OrderStatus) => {
+    // Single-select: if already selected, clear; otherwise, select only this one
     setStatusFilter((prev) =>
-      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
+      prev.includes(status) && prev.length === 1 ? [] : [status]
     );
   };
 
@@ -85,11 +86,10 @@ export default function OrdersPage() {
   const todayKey = getLocalDateKey(today);
   const tomorrowKey = getLocalDateKey(tomorrow);
 
-  const toggleDate = (dateKey: DeliveryDateKey) => {
+  const selectSingleDate = (dateKey: DeliveryDateKey) => {
+    // Single-select: if already selected, clear; otherwise, select only this one
     setDateFilter((prev) =>
-      prev.includes(dateKey)
-        ? prev.filter((d) => d !== dateKey)
-        : [...prev, dateKey]
+      prev.includes(dateKey) && prev.length === 1 ? [] : [dateKey]
     );
   };
 
@@ -158,19 +158,22 @@ export default function OrdersPage() {
           >
             All
           </button>
-          {ORDER_STATUSES.map((status) => (
-            <button
-              key={status}
-              onClick={() => toggleStatus(status)}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                statusFilter.includes(status)
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              {status}
-            </button>
-          ))}
+          {ORDER_STATUSES.map((status) => {
+            const isActive = statusFilter.includes(status) && statusFilter.length === 1;
+            return (
+              <button
+                key={status}
+                onClick={() => selectSingleStatus(status)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {status}
+              </button>
+            );
+          })}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium text-gray-500 mr-1">
@@ -206,11 +209,11 @@ export default function OrdersPage() {
             { key: todayKey, label: "Today" },
             { key: tomorrowKey, label: "Tomorrow" },
           ].map(({ key, label }) => {
-            const isActive = dateFilter.includes(key);
+            const isActive = dateFilter.includes(key) && dateFilter.length === 1;
             return (
               <button
                 key={key}
-                onClick={() => toggleDate(key)}
+                onClick={() => selectSingleDate(key)}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-blue-600 text-white"
@@ -225,7 +228,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Orders Table */}
-      <main className="p-4">
+      <main className="p-2 md:p-4">
         {message && (
           <div className="mb-4 p-4 rounded bg-red-100 text-red-800">
             {message}
@@ -254,11 +257,11 @@ export default function OrdersPage() {
             {(["Order", "Ready", "Done"] as const).map((tab) => {
               const status: OrderStatus =
                 tab === "Order" ? "Ordered" : (tab as OrderStatus);
-              const isActive = statusFilter.includes(status);
+              const isActive = statusFilter.includes(status) && statusFilter.length === 1;
               return (
                 <button
                   key={tab}
-                  onClick={() => toggleStatus(status)}
+                  onClick={() => selectSingleStatus(status)}
                   className={`flex flex-col items-center gap-1 ${
                     isActive ? "text-blue-600" : "text-gray-500"
                   }`}

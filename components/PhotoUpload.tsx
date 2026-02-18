@@ -89,7 +89,7 @@ export function PhotoUpload({
       {hasPhotos ? (
         <div className="grid grid-cols-2 gap-4">
           {existingPhotos.map((photoUrl, index) => (
-            <div key={`existing-${index}`} className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300 bg-gray-100">
+            <div key={`existing-${index}`} className="relative w-full h-72 rounded-lg overflow-hidden border border-gray-300 bg-gray-100">
               <Image
                 src={photoUrl}
                 alt={`Photo ${index + 1}`}
@@ -107,7 +107,7 @@ export function PhotoUpload({
             </div>
           ))}
           {newPreviews.map((preview, index) => (
-            <div key={`new-${index}`} className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300 bg-gray-100">
+            <div key={`new-${index}`} className="relative w-full h-72 rounded-lg overflow-hidden border border-gray-300 bg-gray-100">
               <Image
                 src={preview}
                 alt={`New photo ${index + 1}`}

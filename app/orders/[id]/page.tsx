@@ -93,7 +93,7 @@ export default function ViewOrderPage() {
               {order.photos.map((photoUrl, index) => (
                 <div
                   key={index}
-                  className="relative w-full h-40 rounded-lg overflow-hidden border border-gray-300 bg-gray-100"
+                  className="relative w-full h-80 rounded-lg overflow-hidden border border-gray-300 bg-gray-100"
                 >
                   <Image
                     src={photoUrl}

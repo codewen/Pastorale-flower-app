@@ -27,4 +27,6 @@ export interface OrderFormData {
   payment_status: PaymentStatus;
   price: number | null;
   photos?: File[];
+  /** When editing: existing photo URLs to keep (omitted = keep all). */
+  existingPhotoUrls?: string[];
 }

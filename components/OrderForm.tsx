@@ -35,6 +35,12 @@ export function OrderForm({
     photos: [],
   });
 
+  const [remainingExistingPhotos, setRemainingExistingPhotos] = useState<string[]>(existingPhotos);
+
+  useEffect(() => {
+    setRemainingExistingPhotos(existingPhotos);
+  }, [existingPhotos]);
+
   useEffect(() => {
     if (initialData?.delivery_date_time) {
       // Convert to local datetime string for input
@@ -50,7 +56,10 @@ export function OrderForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
+    await onSubmit({
+      ...formData,
+      existingPhotoUrls: existingPhotos.length > 0 ? remainingExistingPhotos : undefined,
+    });
   };
 
   const handlePhotosChange = (files: File[]) => {
@@ -67,6 +76,21 @@ export function OrderForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 p-6">
+      {/* Customer ID */}
+      <div>
+        <Label htmlFor="customer-id" className="mb-2 block">
+          Customer ID*
+        </Label>
+        <Input
+          id="customer-id"
+          value={formData.customer_id}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, customer_id: e.target.value }))
+          }
+          required
+        />
+      </div>
+
       {/* Pickup/Delivery */}
       <div>
         <Label className="mb-2 block">Pickup/Delivery*</Label>
@@ -111,21 +135,6 @@ export function OrderForm({
         />
       </div>
 
-      {/* Customer ID */}
-      <div>
-        <Label htmlFor="customer-id" className="mb-2 block">
-          Customer ID*
-        </Label>
-        <Input
-          id="customer-id"
-          value={formData.customer_id}
-          onChange={(e) =>
-            setFormData((prev) => ({ ...prev, customer_id: e.target.value }))
-          }
-          required
-        />
-      </div>
-
       {/* Details */}
       <div>
         <Label htmlFor="details" className="mb-2 block">
@@ -145,6 +154,7 @@ export function OrderForm({
       <PhotoUpload
         photos={existingPhotos}
         onPhotosChange={handlePhotosChange}
+        onExistingPhotosChange={setRemainingExistingPhotos}
       />
 
       {/* Payment Status */}

@@ -74,32 +74,32 @@ export default function ViewOrderPage() {
         </div>
       </header>
 
-      <div className="p-4 space-y-4">
+      <div className="p-3 space-y-2">
         {/* Customer ID */}
-        <div className="border-b border-gray-100 pb-3">
-          <label className="text-sm font-medium text-gray-500 block mb-1">
+        <div className="border-b border-gray-100 pb-2">
+          <label className="text-xs font-medium text-gray-500 block mb-0.5">
             Customer ID
           </label>
-          <p className="text-base text-gray-900">{order.customer_id}</p>
+          <p className="text-sm text-gray-900">{order.customer_id}</p>
         </div>
 
         {/* Photos */}
         {order.photos && order.photos.length > 0 && (
-          <div className="border-b border-gray-100 pb-3">
-            <label className="text-sm font-medium text-gray-500 block mb-2">
+          <div className="border-b border-gray-100 pb-2">
+            <label className="text-xs font-medium text-gray-500 block mb-1">
               Photo
             </label>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {order.photos.map((photoUrl, index) => (
                 <div
                   key={index}
-                  className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300"
+                  className="relative w-full h-40 rounded-lg overflow-hidden border border-gray-300 bg-gray-100"
                 >
                   <Image
                     src={photoUrl}
                     alt={`Photo ${index + 1}`}
                     fill
-                    className="object-cover"
+                    className="object-contain"
                     unoptimized
                   />
                 </div>
@@ -109,30 +109,30 @@ export default function ViewOrderPage() {
         )}
 
         {/* Pickup/Delivery */}
-        <div className="border-b border-gray-100 pb-3">
-          <label className="text-sm font-medium text-gray-500 block mb-1">
+        <div className="border-b border-gray-100 pb-2">
+          <label className="text-xs font-medium text-gray-500 block mb-0.5">
             Pickup/Delivery
           </label>
-          <p className="text-base text-gray-900">{order.pickup_delivery}</p>
+          <p className="text-sm text-gray-900">{order.pickup_delivery}</p>
         </div>
 
         {/* Date/Time */}
-        <div className="border-b border-gray-100 pb-3">
-          <label className="text-sm font-medium text-gray-500 block mb-1">
+        <div className="border-b border-gray-100 pb-2">
+          <label className="text-xs font-medium text-gray-500 block mb-0.5">
             Date/Time
           </label>
-          <p className="text-base text-gray-900">
+          <p className="text-sm text-gray-900">
             {formatDate(order.delivery_date_time)}
           </p>
         </div>
 
         {/* Payment Status */}
-        <div className="border-b border-gray-100 pb-3">
-          <label className="text-sm font-medium text-gray-500 block mb-1">
+        <div className="border-b border-gray-100 pb-2">
+          <label className="text-xs font-medium text-gray-500 block mb-0.5">
             Payment Status
           </label>
           <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
               order.payment_status === "Paid"
                 ? "bg-green-100 text-green-800"
                 : order.payment_status === "Pending"
@@ -145,20 +145,20 @@ export default function ViewOrderPage() {
         </div>
 
         {/* Status */}
-        <div className="border-b border-gray-100 pb-3">
-          <label className="text-sm font-medium text-gray-500 block mb-1">
+        <div className="border-b border-gray-100 pb-2">
+          <label className="text-xs font-medium text-gray-500 block mb-0.5">
             Status
           </label>
-          <p className="text-base text-gray-900">{order.status}</p>
+          <p className="text-sm text-gray-900">{order.status}</p>
         </div>
 
         {/* Price */}
         {order.price !== null && (
-          <div className="border-b border-gray-100 pb-3">
-            <label className="text-sm font-medium text-gray-500 block mb-1">
+          <div className="border-b border-gray-100 pb-2">
+            <label className="text-xs font-medium text-gray-500 block mb-0.5">
               Price
             </label>
-            <p className="text-base text-gray-900">
+            <p className="text-sm text-gray-900">
               {formatCurrency(order.price)}
             </p>
           </div>
@@ -166,11 +166,11 @@ export default function ViewOrderPage() {
 
         {/* Details */}
         {order.details && (
-          <div className="border-b border-gray-100 pb-3">
-            <label className="text-sm font-medium text-gray-500 block mb-1">
+          <div className="border-b border-gray-100 pb-2">
+            <label className="text-xs font-medium text-gray-500 block mb-0.5">
               Details
             </label>
-            <p className="text-base text-gray-900 whitespace-pre-wrap">
+            <p className="text-sm text-gray-900 whitespace-pre-wrap">
               {order.details}
             </p>
           </div>

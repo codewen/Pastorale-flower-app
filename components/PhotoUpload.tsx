@@ -8,12 +8,14 @@ import Image from "next/image";
 interface PhotoUploadProps {
   photos?: string[]; // Existing photo URLs
   onPhotosChange: (files: File[]) => void; // New files to upload
+  onExistingPhotosChange?: (urls: string[]) => void; // When editing: remaining existing URLs after remove
   label?: string;
 }
 
 export function PhotoUpload({
   photos = [],
   onPhotosChange,
+  onExistingPhotosChange,
   label = "Photos",
 }: PhotoUploadProps) {
   const [existingPhotos, setExistingPhotos] = useState<string[]>(photos);
@@ -50,14 +52,19 @@ export function PhotoUpload({
   };
 
   const handleRemoveExisting = (index: number) => {
-    // Remove from display (will be kept in database until explicitly removed)
-    setExistingPhotos((prev) => prev.filter((_, i) => i !== index));
+    setExistingPhotos((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      onExistingPhotosChange?.(next);
+      return next;
+    });
   };
 
   const handleRemoveNew = (index: number) => {
-    setNewFiles((prev) => prev.filter((_, i) => i !== index));
-    setNewPreviews((prev) => prev.filter((_, i) => i !== index));
-    onPhotosChange(newFiles.filter((_, i) => i !== index));
+    const nextFiles = newFiles.filter((_, i) => i !== index);
+    const nextPreviews = newPreviews.filter((_, i) => i !== index);
+    setNewFiles(nextFiles);
+    setNewPreviews(nextPreviews);
+    onPhotosChange(nextFiles);
   };
 
   const handleAddMore = () => {
@@ -82,12 +89,12 @@ export function PhotoUpload({
       {hasPhotos ? (
         <div className="grid grid-cols-2 gap-4">
           {existingPhotos.map((photoUrl, index) => (
-            <div key={`existing-${index}`} className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300">
+            <div key={`existing-${index}`} className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300 bg-gray-100">
               <Image
                 src={photoUrl}
                 alt={`Photo ${index + 1}`}
                 fill
-                className="object-cover"
+                className="object-contain"
                 unoptimized
               />
               <button
@@ -100,12 +107,12 @@ export function PhotoUpload({
             </div>
           ))}
           {newPreviews.map((preview, index) => (
-            <div key={`new-${index}`} className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300">
+            <div key={`new-${index}`} className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300 bg-gray-100">
               <Image
                 src={preview}
                 alt={`New photo ${index + 1}`}
                 fill
-                className="object-cover"
+                className="object-contain"
                 unoptimized
               />
               <button

@@ -103,15 +103,18 @@ export async function updateOrder(
     updated_at: new Date().toISOString(),
   };
 
-  // Upload new photos if provided
+  // Resolve base photos: remaining existing (after user removals) or current order photos
+  const existingOrder = await getOrderById(id);
+  const basePhotos =
+    formData.existingPhotoUrls ?? existingOrder?.photos ?? [];
+
   if (formData.photos && formData.photos.length > 0) {
     const newPhotoUrls = await Promise.all(
       formData.photos.map((photo) => uploadPhoto(photo))
     );
-    // Get existing order to merge with existing photos
-    const existingOrder = await getOrderById(id);
-    const existingPhotos = existingOrder?.photos || [];
-    updateData.photos = [...existingPhotos, ...newPhotoUrls];
+    updateData.photos = [...basePhotos, ...newPhotoUrls];
+  } else {
+    updateData.photos = basePhotos;
   }
 
   if (formData.order_id) {

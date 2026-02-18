@@ -15,6 +15,7 @@ export default function ViewOrderPage() {
   const orderId = params.id as string;
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
   const loadOrder = useCallback(async () => {
     try {
@@ -91,9 +92,11 @@ export default function ViewOrderPage() {
             </label>
             <div className="space-y-2">
               {order.photos.map((photoUrl, index) => (
-                <div
+                <button
                   key={index}
-                  className="relative w-full h-80 rounded-lg overflow-hidden border border-gray-300 bg-gray-100"
+                  type="button"
+                  onClick={() => setFullscreenImage((current) => (current === photoUrl ? null : photoUrl))}
+                  className="relative w-full h-80 rounded-lg overflow-hidden border border-gray-300 bg-gray-100 block text-left"
                 >
                   <Image
                     src={photoUrl}
@@ -102,9 +105,23 @@ export default function ViewOrderPage() {
                     className="object-contain"
                     unoptimized
                   />
-                </div>
+                </button>
               ))}
             </div>
+            {fullscreenImage && (
+              <button
+                type="button"
+                onClick={() => setFullscreenImage(null)}
+                className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+                aria-label="Close fullscreen"
+              >
+                <img
+                  src={fullscreenImage}
+                  alt="Fullscreen"
+                  className="max-w-full max-h-full object-contain"
+                />
+              </button>
+            )}
           </div>
         )}
 

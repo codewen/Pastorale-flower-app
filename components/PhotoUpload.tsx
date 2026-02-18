@@ -21,6 +21,7 @@ export function PhotoUpload({
   const [existingPhotos, setExistingPhotos] = useState<string[]>(photos);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync existing photos when prop changes
@@ -90,17 +91,23 @@ export function PhotoUpload({
         <div className="grid grid-cols-2 gap-4">
           {existingPhotos.map((photoUrl, index) => (
             <div key={`existing-${index}`} className="relative w-full h-72 rounded-lg overflow-hidden border border-gray-300 bg-gray-100">
-              <Image
-                src={photoUrl}
-                alt={`Photo ${index + 1}`}
-                fill
-                className="object-contain"
-                unoptimized
-              />
               <button
                 type="button"
-                onClick={() => handleRemoveExisting(index)}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                onClick={() => setFullscreenImage((current) => (current === photoUrl ? null : photoUrl))}
+                className="absolute inset-0 w-full h-full"
+              >
+                <Image
+                  src={photoUrl}
+                  alt={`Photo ${index + 1}`}
+                  fill
+                  className="object-contain"
+                  unoptimized
+                />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); handleRemoveExisting(index); }}
+                className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -108,17 +115,23 @@ export function PhotoUpload({
           ))}
           {newPreviews.map((preview, index) => (
             <div key={`new-${index}`} className="relative w-full h-72 rounded-lg overflow-hidden border border-gray-300 bg-gray-100">
-              <Image
-                src={preview}
-                alt={`New photo ${index + 1}`}
-                fill
-                className="object-contain"
-                unoptimized
-              />
               <button
                 type="button"
-                onClick={() => handleRemoveNew(index)}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                onClick={() => setFullscreenImage((current) => (current === preview ? null : preview))}
+                className="absolute inset-0 w-full h-full"
+              >
+                <Image
+                  src={preview}
+                  alt={`New photo ${index + 1}`}
+                  fill
+                  className="object-contain"
+                  unoptimized
+                />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); handleRemoveNew(index); }}
+                className="absolute top-2 right-2 z-10 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -148,6 +161,20 @@ export function PhotoUpload({
             Add Photos
           </Button>
         </div>
+      )}
+      {fullscreenImage && (
+        <button
+          type="button"
+          onClick={() => setFullscreenImage(null)}
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          aria-label="Close fullscreen"
+        >
+          <img
+            src={fullscreenImage}
+            alt="Fullscreen"
+            className="max-w-full max-h-full object-contain"
+          />
+        </button>
       )}
     </div>
   );

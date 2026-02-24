@@ -24,9 +24,15 @@ export function PhotoUpload({
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync existing photos when prop changes
+  // Sync existing photos when prop changes (compare by reference and length/content to avoid loop from new [] each render)
   useEffect(() => {
-    setExistingPhotos(photos);
+    setExistingPhotos((prev) => {
+      if (prev === photos) return prev;
+      if (prev.length !== photos.length) return photos;
+      if (photos.length === 0) return prev;
+      if (prev.some((url, i) => url !== photos[i])) return photos;
+      return prev;
+    });
   }, [photos]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -51,6 +51,7 @@ export default function NewOrderPage() {
       <OrderForm
         onSubmit={handleSubmit}
         onCancel={handleCancel}
+        cancelHref="/orders"
         isLoading={isLoading}
       />
     </div>

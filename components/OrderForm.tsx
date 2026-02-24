@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -8,22 +9,31 @@ import { Label } from "./ui/label";
 import { PhotoUpload } from "./PhotoUpload";
 import { OrderFormData, PickupDelivery, PaymentStatus, OrderStatus } from "@/types/order";
 import { formatDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface OrderFormProps {
   initialData?: Partial<OrderFormData>;
   existingPhotos?: string[]; // Existing photo URLs when editing
   onSubmit: (data: OrderFormData) => Promise<void>;
   onCancel: () => void;
+  /** When set, Cancel is rendered as a Link for reliable navigation (e.g. /orders). */
+  cancelHref?: string;
   isLoading?: boolean;
 }
 
+const EMPTY_PHOTOS: string[] = [];
+
 export function OrderForm({
   initialData,
-  existingPhotos = [],
+  existingPhotos,
   onSubmit,
   onCancel,
+  cancelHref,
   isLoading = false,
 }: OrderFormProps) {
+  const stableExistingPhotos =
+    existingPhotos && existingPhotos.length > 0 ? existingPhotos : EMPTY_PHOTOS;
+
   const [formData, setFormData] = useState<OrderFormData>({
     customer_id: initialData?.customer_id || "",
     details: initialData?.details || "",
@@ -35,11 +45,11 @@ export function OrderForm({
     photos: [],
   });
 
-  const [remainingExistingPhotos, setRemainingExistingPhotos] = useState<string[]>(existingPhotos);
+  const [remainingExistingPhotos, setRemainingExistingPhotos] = useState<string[]>(stableExistingPhotos);
 
   useEffect(() => {
-    setRemainingExistingPhotos(existingPhotos);
-  }, [existingPhotos]);
+    setRemainingExistingPhotos(stableExistingPhotos);
+  }, [stableExistingPhotos]);
 
   useEffect(() => {
     if (initialData?.delivery_date_time) {
@@ -58,7 +68,7 @@ export function OrderForm({
     e.preventDefault();
     await onSubmit({
       ...formData,
-      existingPhotoUrls: existingPhotos.length > 0 ? remainingExistingPhotos : undefined,
+      existingPhotoUrls: stableExistingPhotos.length > 0 ? remainingExistingPhotos : undefined,
     });
   };
 
@@ -152,7 +162,7 @@ export function OrderForm({
 
       {/* Photos */}
       <PhotoUpload
-        photos={existingPhotos}
+        photos={stableExistingPhotos}
         onPhotosChange={handlePhotosChange}
         onExistingPhotosChange={setRemainingExistingPhotos}
       />
@@ -243,9 +253,29 @@ export function OrderForm({
 
       {/* Actions */}
       <div className="flex justify-end gap-4 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
+        {cancelHref ? (
+          <Link
+            href={cancelHref}
+            className={cn(
+              "inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2",
+              "border border-gray-300 bg-white text-gray-900 hover:bg-gray-50 transition-colors"
+            )}
+          >
+            Cancel
+          </Link>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onCancel();
+            }}
+          >
+            Cancel
+          </Button>
+        )}
         <Button type="submit" disabled={isLoading}>
           {isLoading ? "Saving..." : "Save"}
         </Button>

@@ -11,7 +11,6 @@ const secret =
   (process.env.NODE_ENV === "development" ? "pastorale-dev-secret" : undefined);
 
 const handler = NextAuth({
-  trustHost: true,
   secret,
   providers: [
     CredentialsProvider({

@@ -1,13 +1,38 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
-import { getOrderById } from "@/lib/supabase/orders";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { getOrderById, getOrders } from "@/lib/supabase/orders";
 import { Order } from "@/types/order";
+import type { OrderStatus } from "@/types/order";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatCurrency } from "@/lib/utils";
-import { Edit } from "lucide-react";
+import { Edit, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
+
+const STATUS_STORAGE_KEY = "orders-status-filter";
+
+function getStoredStatusFilter(): OrderStatus[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(STATUS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    if (parsed.length === 0) return [];
+    if (
+      parsed.length === 1 &&
+      (parsed[0] === "Ordered" || parsed[0] === "Ready" || parsed[0] === "Done")
+    ) {
+      return parsed as OrderStatus[];
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+const SWIPE_THRESHOLD_PX = 60;
 
 export default function ViewOrderPage() {
   const params = useParams();
@@ -16,6 +41,9 @@ export default function ViewOrderPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [prevId, setPrevId] = useState<string | null>(null);
+  const [nextId, setNextId] = useState<string | null>(null);
+  const touchStartX = useRef<number | null>(null);
 
   const loadOrder = useCallback(async () => {
     try {
@@ -32,6 +60,59 @@ export default function ViewOrderPage() {
   useEffect(() => {
     loadOrder();
   }, [loadOrder]);
+
+  // Load list order (same filter as list page) to resolve prev/next for swipe
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const all = await getOrders();
+        const statusFilter = getStoredStatusFilter();
+        const filtered =
+          statusFilter !== null && statusFilter.length > 0
+            ? all.filter((o) => statusFilter.includes(o.status))
+            : all;
+        // getOrders returns delivery_date_time desc
+        const idx = filtered.findIndex((o) => o.id === orderId);
+        if (cancelled) return;
+        setPrevId(idx > 0 ? filtered[idx - 1].id : null);
+        setNextId(idx >= 0 && idx < filtered.length - 1 ? filtered[idx + 1].id : null);
+      } catch {
+        if (!cancelled) {
+          setPrevId(null);
+          setNextId(null);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId]);
+
+  const goToPrev = useCallback(() => {
+    if (prevId) router.replace(`/orders/${prevId}`);
+  }, [prevId, router]);
+
+  const goToNext = useCallback(() => {
+    if (nextId) router.replace(`/orders/${nextId}`);
+  }, [nextId, router]);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      const start = touchStartX.current;
+      touchStartX.current = null;
+      if (start == null) return;
+      const end = e.changedTouches[0].clientX;
+      const deltaX = end - start;
+      if (deltaX > SWIPE_THRESHOLD_PX) goToPrev();
+      else if (deltaX < -SWIPE_THRESHOLD_PX) goToNext();
+    },
+    [goToPrev, goToNext]
+  );
 
   if (isLoading) {
     return (
@@ -50,7 +131,11 @@ export default function ViewOrderPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div
+      className="min-h-screen bg-white pb-20 touch-pan-y"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <header className="border-b border-gray-200 p-4 flex items-center justify-between sticky top-0 bg-white z-10">
         <div className="flex items-center gap-3">
           <button
@@ -74,6 +159,28 @@ export default function ViewOrderPage() {
           <h1 className="text-xl font-semibold">Details</h1>
         </div>
       </header>
+
+      {/* Swipe prev/next buttons (desktop or when swipe is unclear) */}
+      {prevId && (
+        <button
+          type="button"
+          onClick={goToPrev}
+          className="fixed left-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white/90 shadow border border-gray-200 text-gray-700 hover:bg-gray-50"
+          aria-label="Previous order"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+      )}
+      {nextId && (
+        <button
+          type="button"
+          onClick={goToNext}
+          className="fixed right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white/90 shadow border border-gray-200 text-gray-700 hover:bg-gray-50"
+          aria-label="Next order"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </button>
+      )}
 
       <div className="p-3 space-y-2">
         {/* Customer ID */}

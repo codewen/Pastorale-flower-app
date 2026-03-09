@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { OrderTable } from "@/components/OrderTable";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,28 @@ type PickupDeliveryFilter = PickupDelivery | "All";
 type DeliveryDateKey = string; // YYYY-MM-DD in local time
 
 const ORDER_STATUSES: OrderStatus[] = ["Ordered", "Ready", "Done"];
+const STATUS_STORAGE_KEY = "orders-status-filter";
+
+function getStoredStatusFilter(): OrderStatus[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(STATUS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    if (parsed.length === 0) return [];
+    if (
+      parsed.length === 1 &&
+      (parsed[0] === "Ordered" || parsed[0] === "Ready" || parsed[0] === "Done")
+    ) {
+      return parsed as OrderStatus[];
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 const FOOTER_STATUS_TABS = [
   { label: "Order", status: "Ordered" as OrderStatus, Icon: ClipboardList },
   { label: "Ready", status: "Ready" as OrderStatus, Icon: Clock3 },
@@ -47,25 +69,45 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const isFirstPersistRun = useRef(true);
 
   useEffect(() => {
     loadOrders();
   }, []);
 
+  // Restore status filter when returning to the list (e.g. back from order detail)
+  useEffect(() => {
+    const stored = getStoredStatusFilter();
+    if (stored !== null) {
+      setStatusFilter(stored);
+    }
+  }, []);
+
+  // Persist status filter so it survives navigation and refresh (skip first run so we don't overwrite stored value with initial state before restore)
+  useEffect(() => {
+    if (isFirstPersistRun.current) {
+      isFirstPersistRun.current = false;
+      return;
+    }
+    sessionStorage.setItem(STATUS_STORAGE_KEY, JSON.stringify(statusFilter));
+  }, [statusFilter]);
+
   useEffect(() => {
     let filtered = orders;
     if (statusFilter.length > 0) {
-      filtered = filtered.filter((order) => statusFilter.includes(order.status));
+      filtered = filtered.filter((order) =>
+        statusFilter.includes(order.status),
+      );
     }
     if (pickupDeliveryFilter !== "All") {
       filtered = filtered.filter(
-        (order) => order.pickup_delivery === pickupDeliveryFilter
+        (order) => order.pickup_delivery === pickupDeliveryFilter,
       );
     }
     if (dateFilter.length > 0) {
       const allowed = new Set(dateFilter);
       filtered = filtered.filter((order) =>
-        allowed.has(getLocalDateKey(order.delivery_date_time))
+        allowed.has(getLocalDateKey(order.delivery_date_time)),
       );
     }
     setFilteredOrders(filtered);
@@ -87,7 +129,7 @@ export default function OrdersPage() {
   const selectSingleStatus = (status: OrderStatus) => {
     // Single-select: if already selected, clear; otherwise, select only this one
     setStatusFilter((prev) =>
-      prev.includes(status) && prev.length === 1 ? [] : [status]
+      prev.includes(status) && prev.length === 1 ? [] : [status],
     );
   };
 
@@ -103,7 +145,7 @@ export default function OrdersPage() {
   const selectSingleDate = (dateKey: DeliveryDateKey) => {
     // Single-select: if already selected, clear; otherwise, select only this one
     setDateFilter((prev) =>
-      prev.includes(dateKey) && prev.length === 1 ? [] : [dateKey]
+      prev.includes(dateKey) && prev.length === 1 ? [] : [dateKey],
     );
   };
 
@@ -173,7 +215,8 @@ export default function OrdersPage() {
             All
           </button>
           {ORDER_STATUSES.map((status) => {
-            const isActive = statusFilter.includes(status) && statusFilter.length === 1;
+            const isActive =
+              statusFilter.includes(status) && statusFilter.length === 1;
             return (
               <button
                 key={status}
@@ -223,7 +266,8 @@ export default function OrdersPage() {
             { key: todayKey, label: "Today" },
             { key: tomorrowKey, label: "Tomorrow" },
           ].map(({ key, label }) => {
-            const isActive = dateFilter.includes(key) && dateFilter.length === 1;
+            const isActive =
+              dateFilter.includes(key) && dateFilter.length === 1;
             return (
               <button
                 key={key}
@@ -249,7 +293,9 @@ export default function OrdersPage() {
           </div>
         )}
         {isLoading ? (
-          <div className="text-center py-12 text-gray-500">Loading orders...</div>
+          <div className="text-center py-12 text-gray-500">
+            Loading orders...
+          </div>
         ) : (
           <OrderTable orders={filteredOrders} searchQuery={searchQuery} />
         )}
@@ -281,9 +327,7 @@ export default function OrdersPage() {
                 >
                   <Icon className="h-4 w-4" />
                   <span className="text-xs font-medium">{label}</span>
-                  {isActive ? (
-                    <div className="h-0.5 w-8 bg-blue-600" />
-                  ) : null}
+                  {isActive ? <div className="h-0.5 w-8 bg-blue-600" /> : null}
                 </button>
               );
             })}

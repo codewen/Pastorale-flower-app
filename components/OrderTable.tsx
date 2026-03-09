@@ -24,7 +24,8 @@ type SortDirection = "asc" | "desc";
 
 export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
   const router = useRouter();
-  const [sortColumn, setSortColumn] = useState<SortColumn>("delivery_date_time");
+  const [sortColumn, setSortColumn] =
+    useState<SortColumn>("delivery_date_time");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   const filteredOrders = useMemo(() => {
@@ -112,49 +113,49 @@ export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
         <thead>
           <tr className="border-b border-gray-200">
             <th
-              className="text-left p-2 md:p-3 font-medium text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
               onClick={() => handleSort("delivery_date_time")}
             >
               Date/Time
               <SortIcon column="delivery_date_time" />
             </th>
             <th
-              className="text-left p-2 md:p-3 font-medium text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
               onClick={() => handleSort("pickup_delivery")}
             >
               Pickup/Delivery
               <SortIcon column="pickup_delivery" />
             </th>
             <th
-              className="text-left p-2 md:p-3 font-medium text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
               onClick={() => handleSort("customer_id")}
             >
               Customer ID
               <SortIcon column="customer_id" />
             </th>
             <th
-              className="text-left p-2 md:p-3 font-medium text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
               onClick={() => handleSort("price")}
             >
               Price
               <SortIcon column="price" />
             </th>
             <th
-              className="text-left p-2 md:p-3 font-medium text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
               onClick={() => handleSort("payment_status")}
             >
               Payment Status
               <SortIcon column="payment_status" />
             </th>
             <th
-              className="text-left p-2 md:p-3 font-medium text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
               onClick={() => handleSort("details")}
             >
               Details
               <SortIcon column="details" />
             </th>
             <th
-              className="text-left p-2 md:p-3 font-medium text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
               onClick={() => handleSort("status")}
             >
               Status
@@ -162,7 +163,7 @@ export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="text-gray-600">
           {filteredOrders.length === 0 ? (
             <tr>
               <td colSpan={7} className="text-center p-6 md:p-8 text-gray-500">
@@ -181,15 +182,17 @@ export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
                 </td>
                 <td className="p-2 md:p-3 text-sm">{order.pickup_delivery}</td>
                 <td className="p-2 md:p-3 text-sm">{order.customer_id}</td>
-                <td className="p-2 md:p-3 text-sm">{formatCurrency(order.price)}</td>
+                <td className="p-2 md:p-3 text-sm">
+                  {formatCurrency(order.price)}
+                </td>
                 <td className="p-2 md:p-3 text-sm">
                   <span
                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                       order.payment_status === "Paid"
                         ? "bg-green-100 text-green-800"
                         : order.payment_status === "Pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-red-100 text-red-800"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-red-100 text-red-800"
                     }`}
                   >
                     {order.payment_status}

@@ -6,12 +6,26 @@ import { OrderTable } from "@/components/OrderTable";
 import { Input } from "@/components/ui/input";
 import { getOrders } from "@/lib/supabase/orders";
 import { Order, OrderStatus, PickupDelivery } from "@/types/order";
-import { Plus, Search, RefreshCw, Filter, X } from "lucide-react";
+import {
+  Plus,
+  Search,
+  RefreshCw,
+  Filter,
+  X,
+  ClipboardList,
+  Clock3,
+  CheckCheck,
+} from "lucide-react";
 
 type PickupDeliveryFilter = PickupDelivery | "All";
 type DeliveryDateKey = string; // YYYY-MM-DD in local time
 
 const ORDER_STATUSES: OrderStatus[] = ["Ordered", "Ready", "Done"];
+const FOOTER_STATUS_TABS = [
+  { label: "Order", status: "Ordered" as OrderStatus, Icon: ClipboardList },
+  { label: "Ready", status: "Ready" as OrderStatus, Icon: Clock3 },
+  { label: "Done", status: "Done" as OrderStatus, Icon: CheckCheck },
+];
 
 function getLocalDateKey(date: string | Date): DeliveryDateKey {
   const d = typeof date === "string" ? new Date(date) : date;
@@ -254,19 +268,19 @@ export default function OrdersPage() {
             <span className="text-xs font-medium">New Order</span>
           </button>
           <div className="flex gap-8">
-            {(["Order", "Ready", "Done"] as const).map((tab) => {
-              const status: OrderStatus =
-                tab === "Order" ? "Ordered" : (tab as OrderStatus);
-              const isActive = statusFilter.includes(status) && statusFilter.length === 1;
+            {FOOTER_STATUS_TABS.map(({ label, status, Icon }) => {
+              const isActive =
+                statusFilter.includes(status) && statusFilter.length === 1;
               return (
                 <button
-                  key={tab}
+                  key={label}
                   onClick={() => selectSingleStatus(status)}
                   className={`flex flex-col items-center gap-1 ${
                     isActive ? "text-blue-600" : "text-gray-500"
                   }`}
                 >
-                  <span className="text-xs font-medium">{tab}</span>
+                  <Icon className="h-4 w-4" />
+                  <span className="text-xs font-medium">{label}</span>
                   {isActive ? (
                     <div className="h-0.5 w-8 bg-blue-600" />
                   ) : null}

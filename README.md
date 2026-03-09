@@ -124,6 +124,9 @@ If you haven't set up Supabase yet, you can:
 
 - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key
+- `NEXTAUTH_SECRET`: Required for NextAuth (login). Use a random string, e.g. `openssl rand -base64 32`. In local dev, a fallback is used if unset.
+- `NEXTAUTH_URL`: (Optional) Set to `http://localhost:3000` for local dev to avoid warnings; in production set to your site URL.
+- `AUTH_PASSWORD`: (Optional) Shared login password; default is `pastorale`.
 
 ## Deployment
 

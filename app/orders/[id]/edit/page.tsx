@@ -39,7 +39,7 @@ export default function EditOrderPage() {
       formData.delivery_date_time = dateTime.toISOString();
 
       await updateOrder(orderId, formData);
-      router.push("/orders");
+      router.push(`/orders/${orderId}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to update order. Please try again.";
       alert(errorMessage);

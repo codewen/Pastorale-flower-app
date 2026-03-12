@@ -4,7 +4,11 @@ import { Order, OrderFormData } from "@/types/order";
 const STORAGE_BUCKET = "order-photos";
 
 export async function getOrders(status?: string): Promise<Order[]> {
-  let query = supabase.from("orders").select("*").order("delivery_date_time", { ascending: false });
+  let query = supabase
+    .from("orders")
+    .select("*")
+    .order("delivery_date_time", { ascending: false })
+    .order("created_at", { ascending: true });
 
   if (status) {
     query = query.eq("status", status);
@@ -105,12 +109,14 @@ export async function updateOrder(
 
   // Resolve base photos: remaining existing (after user removals) or current order photos
   const existingOrder = await getOrderById(id);
+  const existingPhotos = Array.isArray(existingOrder?.photos) ? existingOrder.photos : [];
   const basePhotos =
-    formData.existingPhotoUrls ?? existingOrder?.photos ?? [];
+    formData.existingPhotoUrls !== undefined ? formData.existingPhotoUrls : existingPhotos;
 
-  if (formData.photos && formData.photos.length > 0) {
+  const newFiles = formData.photos && formData.photos.length > 0 ? formData.photos : [];
+  if (newFiles.length > 0) {
     const newPhotoUrls = await Promise.all(
-      formData.photos.map((photo) => uploadPhoto(photo))
+      newFiles.map((photo) => uploadPhoto(photo))
     );
     updateData.photos = [...basePhotos, ...newPhotoUrls];
   } else {

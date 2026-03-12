@@ -79,7 +79,10 @@ export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
 
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-      return 0;
+      // Same value: tie-break by created_at so order is stable (earlier created first)
+      const aCreated = new Date(a.created_at).getTime();
+      const bCreated = new Date(b.created_at).getTime();
+      return aCreated - bCreated;
     });
 
     return filtered;

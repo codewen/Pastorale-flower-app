@@ -23,6 +23,12 @@ export function PhotoUpload({
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const newFilesRef = useRef<File[]>([]);
+
+  // Keep ref in sync so async callbacks see latest new files
+  useEffect(() => {
+    newFilesRef.current = newFiles;
+  }, [newFiles]);
 
   // Sync existing photos when prop changes (compare by reference and length/content to avoid loop from new [] each render)
   useEffect(() => {
@@ -44,9 +50,11 @@ export function PhotoUpload({
         reader.onloadend = () => {
           previews.push(reader.result as string);
           if (previews.length === files.length) {
-            setNewFiles((prev) => [...prev, ...files]);
+            const combined = [...newFilesRef.current, ...files];
+            newFilesRef.current = combined;
+            setNewFiles(combined);
             setNewPreviews((prev) => [...prev, ...previews]);
-            onPhotosChange([...newFiles, ...files]);
+            onPhotosChange(combined);
           }
         };
         reader.readAsDataURL(file);
@@ -69,6 +77,7 @@ export function PhotoUpload({
   const handleRemoveNew = (index: number) => {
     const nextFiles = newFiles.filter((_, i) => i !== index);
     const nextPreviews = newPreviews.filter((_, i) => i !== index);
+    newFilesRef.current = nextFiles;
     setNewFiles(nextFiles);
     setNewPreviews(nextPreviews);
     onPhotosChange(nextFiles);

@@ -24,6 +24,7 @@ export default function NewOrderPage() {
     const payload: OrderFormData = {
       ...formData,
       delivery_date_time: dateTime.toISOString(),
+      photos: formData.photos ?? [],
     };
 
     try {

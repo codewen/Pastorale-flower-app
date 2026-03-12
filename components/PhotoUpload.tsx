@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Camera, X, Plus } from "lucide-react";
 import Image from "next/image";
+import { getPhotoUrl } from "@/lib/supabase/orders";
 
 interface PhotoUploadProps {
   photos?: string[]; // Existing photo URLs
@@ -67,11 +68,9 @@ export function PhotoUpload({
   };
 
   const handleRemoveExisting = (index: number) => {
-    setExistingPhotos((prev) => {
-      const next = prev.filter((_, i) => i !== index);
-      onExistingPhotosChange?.(next);
-      return next;
-    });
+    const next = existingPhotos.filter((_, i) => i !== index);
+    onExistingPhotosChange?.(next);
+    setExistingPhotos(next);
   };
 
   const handleRemoveNew = (index: number) => {
@@ -89,6 +88,9 @@ export function PhotoUpload({
 
   const allPhotos = [...existingPhotos, ...newPreviews];
   const hasPhotos = allPhotos.length > 0;
+
+  // Resolve relative paths (e.g. from CSV import) to full Supabase URLs so images don't 404
+  const resolvePhotoUrl = (url: string) => getPhotoUrl(url) || url;
 
   return (
     <div className="space-y-2 text-gray-900">
@@ -108,11 +110,11 @@ export function PhotoUpload({
             <div key={`existing-${index}`} className="relative w-full h-72 rounded-lg overflow-hidden border border-gray-300 bg-gray-100">
               <button
                 type="button"
-                onClick={() => setFullscreenImage((current) => (current === photoUrl ? null : photoUrl))}
+                onClick={() => setFullscreenImage((current) => (current === photoUrl ? null : resolvePhotoUrl(photoUrl)))}
                 className="absolute inset-0 w-full h-full"
               >
                 <Image
-                  src={photoUrl}
+                  src={resolvePhotoUrl(photoUrl)}
                   alt={`Photo ${index + 1}`}
                   fill
                   className="object-contain"

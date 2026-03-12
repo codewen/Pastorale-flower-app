@@ -152,7 +152,7 @@ export default function OrdersPage() {
   const clearDateFilter = () => setDateFilter([]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white min-w-0">
       {/* Header with search in top bar */}
       <header className="border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="flex items-center gap-2 p-3 md:p-4">
@@ -298,8 +298,8 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {/* Orders Table */}
-      <main className="p-1 md:p-4">
+      {/* Orders Table - extra bottom padding so last row scrolls above fixed footer; min-w-0 so table can scroll on md/lg */}
+      <main className="p-1 pb-24 min-w-0">
         {message && (
           <div className="mb-4 p-4 rounded bg-red-100 text-red-800">
             {message}

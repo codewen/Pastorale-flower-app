@@ -2,12 +2,12 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { getOrderById, getOrders } from "@/lib/supabase/orders";
+import { getOrderById, getOrders, getPhotoUrl, deleteOrder } from "@/lib/supabase/orders";
 import { Order } from "@/types/order";
 import type { OrderStatus } from "@/types/order";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatCurrency } from "@/lib/utils";
-import { Edit, ChevronLeft, ChevronRight } from "lucide-react";
+import { Edit, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import Image from "next/image";
 
 const STATUS_STORAGE_KEY = "orders-status-filter";
@@ -43,7 +43,23 @@ export default function ViewOrderPage() {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [prevId, setPrevId] = useState<string | null>(null);
   const [nextId, setNextId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const touchStartX = useRef<number | null>(null);
+
+  const handleDelete = useCallback(async () => {
+    if (!order) return;
+    if (!confirm("Delete this order? This cannot be undone.")) return;
+    try {
+      setIsDeleting(true);
+      await deleteOrder(orderId);
+      router.push("/orders");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to delete order.";
+      alert(message);
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [order, orderId, router]);
 
   const loadOrder = useCallback(async () => {
     try {
@@ -141,6 +157,7 @@ export default function ViewOrderPage() {
           <button
             onClick={() => router.push("/orders")}
             className="p-1 hover:bg-gray-100 rounded"
+            aria-label="Back to orders"
           >
             <svg
               className="w-6 h-6"
@@ -158,6 +175,16 @@ export default function ViewOrderPage() {
           </button>
           <h1 className="text-xl font-semibold">Details</h1>
         </div>
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="p-2 hover:bg-red-50 text-red-600 rounded disabled:opacity-50"
+          aria-label="Delete order"
+          title="Delete order"
+        >
+          <Trash2 className="w-5 h-5" />
+        </button>
       </header>
 
       {/* Swipe prev/next buttons (desktop or when swipe is unclear) */}
@@ -222,22 +249,24 @@ export default function ViewOrderPage() {
               Photo
             </label>
             <div className="space-y-2">
-              {order.photos.map((photoUrl, index) => (
+              {order.photos.map((photoUrl, index) => {
+                const displayUrl = getPhotoUrl(photoUrl) || photoUrl;
+                return (
                 <button
                   key={index}
                   type="button"
-                  onClick={() => setFullscreenImage((current) => (current === photoUrl ? null : photoUrl))}
+                  onClick={() => setFullscreenImage((current) => (current === displayUrl ? null : displayUrl))}
                   className="relative w-full h-80 rounded-lg overflow-hidden border border-gray-300 bg-gray-100 block text-left"
                 >
                   <Image
-                    src={photoUrl}
+                    src={displayUrl}
                     alt={`Photo ${index + 1}`}
                     fill
                     className="object-contain"
                     unoptimized
                   />
                 </button>
-              ))}
+              ); })}
             </div>
             {fullscreenImage && (
               <button

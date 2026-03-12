@@ -111,8 +111,8 @@ export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
   };
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
+    <div className="overflow-x-auto min-w-0">
+      <table className="w-full min-w-max border-collapse">
         <thead>
           <tr className="border-b border-gray-200">
             <th

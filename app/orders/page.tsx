@@ -61,7 +61,7 @@ export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
-  const [statusFilter, setStatusFilter] = useState<OrderStatus[]>([]);
+  const [statusFilter, setStatusFilter] = useState<OrderStatus[]>(["Ordered"]);
   const [pickupDeliveryFilter, setPickupDeliveryFilter] =
     useState<PickupDeliveryFilter>("All");
   const [dateFilter, setDateFilter] = useState<DeliveryDateKey[]>([]);
@@ -153,14 +153,41 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
+      {/* Header with search in top bar */}
       <header className="border-b border-gray-200 bg-white sticky top-0 z-10">
-        <div className="flex items-center justify-between p-4">
-          <h1 className="text-xl font-semibold">Order</h1>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 p-3 md:p-4">
+          <h1 className="text-xl font-semibold shrink-0 flex items-center gap-2">
+            Order
+            {!isLoading && (
+              <span className="text-sm font-normal text-gray-500">
+                ({filteredOrders.length})
+              </span>
+            )}
+          </h1>
+          <div className="relative flex-1 min-w-0 flex items-center">
+            <Search className="absolute left-3 h-4 w-4 text-gray-400 shrink-0" />
+            <Input
+              type="text"
+              placeholder="Search orders..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-9 rounded-lg bg-gray-50 border-gray-200"
+            />
+            {searchQuery.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 p-1.5 hover:bg-gray-200 rounded-full text-gray-500"
+                aria-label="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={() => setFiltersExpanded(!filtersExpanded)}
-              className="p-2 hover:bg-gray-100 rounded md:hidden"
+              className="p-2 hover:bg-gray-100 rounded"
               title="Toggle Filters"
             >
               {filtersExpanded ? (
@@ -179,20 +206,6 @@ export default function OrdersPage() {
           </div>
         </div>
       </header>
-
-      {/* Search */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Search orders..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
 
       {/* Filters: status (multi-select) + pickup/delivery */}
       <div
@@ -286,7 +299,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Orders Table */}
-      <main className="p-2 md:p-4">
+      <main className="p-1 md:p-4">
         {message && (
           <div className="mb-4 p-4 rounded bg-red-100 text-red-800">
             {message}

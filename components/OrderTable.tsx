@@ -113,49 +113,49 @@ export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
         <thead>
           <tr className="border-b border-gray-200">
             <th
-              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left px-2 py-1 md:px-3 md:py-1.5 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight"
               onClick={() => handleSort("delivery_date_time")}
             >
               Date/Time
               <SortIcon column="delivery_date_time" />
             </th>
             <th
-              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left px-2 py-1 md:px-3 md:py-1.5 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight"
               onClick={() => handleSort("pickup_delivery")}
             >
               Pickup/Delivery
               <SortIcon column="pickup_delivery" />
             </th>
             <th
-              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left px-2 py-1 md:px-3 md:py-1.5 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight"
               onClick={() => handleSort("customer_id")}
             >
               Customer ID
               <SortIcon column="customer_id" />
             </th>
             <th
-              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left px-2 py-1 md:px-3 md:py-1.5 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight"
               onClick={() => handleSort("price")}
             >
               Price
               <SortIcon column="price" />
             </th>
             <th
-              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left px-2 py-1 md:px-3 md:py-1.5 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight"
               onClick={() => handleSort("payment_status")}
             >
               Payment Status
               <SortIcon column="payment_status" />
             </th>
             <th
-              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left px-2 py-1 md:px-3 md:py-1.5 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight"
               onClick={() => handleSort("details")}
             >
               Details
               <SortIcon column="details" />
             </th>
             <th
-              className="text-left p-2 md:p-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none"
+              className="text-left px-2 py-1 md:px-3 md:py-1.5 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight"
               onClick={() => handleSort("status")}
             >
               Status

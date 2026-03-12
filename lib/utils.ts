@@ -10,10 +10,12 @@ export function formatDate(date: string | Date): string {
   const day = d.getDate().toString().padStart(2, "0");
   const month = (d.getMonth() + 1).toString().padStart(2, "0");
   const year = d.getFullYear();
-  const hours = d.getHours().toString().padStart(2, "0");
+  const hours24 = d.getHours();
+  const hours12 = hours24 % 12 || 12;
   const minutes = d.getMinutes().toString().padStart(2, "0");
+  const period = hours24 >= 12 ? "PM" : "AM";
 
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
+  return `${day}/${month}/${year} ${hours12}:${minutes} ${period}`;
 }
 
 export function formatCurrency(amount: number | null): string {

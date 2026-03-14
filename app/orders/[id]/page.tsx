@@ -4,13 +4,18 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { getOrderById, getOrders, getPhotoUrl, deleteOrder } from "@/lib/supabase/orders";
 import { Order } from "@/types/order";
-import type { OrderStatus } from "@/types/order";
+import type { OrderStatus, PickupDelivery } from "@/types/order";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { Edit, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import Image from "next/image";
 
 const STATUS_STORAGE_KEY = "orders-status-filter";
+const PICKUP_DELIVERY_STORAGE_KEY = "orders-pickup-delivery-filter";
+const DATE_FILTER_STORAGE_KEY = "orders-date-filter";
+
+type PickupDeliveryFilter = PickupDelivery | "All";
+type DeliveryDateKey = string;
 
 function getStoredStatusFilter(): OrderStatus[] | null {
   if (typeof window === "undefined") return null;
@@ -30,6 +35,41 @@ function getStoredStatusFilter(): OrderStatus[] | null {
   } catch {
     return null;
   }
+}
+
+function getStoredPickupDeliveryFilter(): PickupDeliveryFilter | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(PICKUP_DELIVERY_STORAGE_KEY);
+    if (raw === "All" || raw === "Pickup" || raw === "Delivery") return raw;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function getStoredDateFilter(): DeliveryDateKey[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(DATE_FILTER_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    const valid = parsed.every(
+      (x) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x)
+    );
+    return valid ? (parsed as DeliveryDateKey[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+function getLocalDateKey(date: string | Date): DeliveryDateKey {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 const SWIPE_THRESHOLD_PX = 60;
@@ -77,22 +117,48 @@ export default function ViewOrderPage() {
     loadOrder();
   }, [loadOrder]);
 
-  // Load list order (same filter as list page) to resolve prev/next for swipe
+  // Load list order (same filters + sort as list page) to resolve prev/next for swipe
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const all = await getOrders();
+        let filtered = all;
+
         const statusFilter = getStoredStatusFilter();
-        const filtered =
-          statusFilter !== null && statusFilter.length > 0
-            ? all.filter((o) => statusFilter.includes(o.status))
-            : all;
-        // getOrders returns delivery_date_time desc
+        if (statusFilter !== null && statusFilter.length > 0) {
+          filtered = filtered.filter((o) => statusFilter.includes(o.status));
+        }
+
+        const pickupFilter = getStoredPickupDeliveryFilter();
+        if (pickupFilter !== null && pickupFilter !== "All") {
+          filtered = filtered.filter((o) => o.pickup_delivery === pickupFilter);
+        }
+
+        const dateFilter = getStoredDateFilter();
+        if (dateFilter !== null && dateFilter.length > 0) {
+          const allowed = new Set(dateFilter);
+          filtered = filtered.filter((o) =>
+            allowed.has(getLocalDateKey(o.delivery_date_time))
+          );
+        }
+
+        // Sort by delivery_date_time asc (earliest first), then created_at asc — matches list page default
+        filtered = [...filtered].sort((a, b) => {
+          const tA = new Date(a.delivery_date_time).getTime();
+          const tB = new Date(b.delivery_date_time).getTime();
+          if (tA !== tB) return tA - tB;
+          return (
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
+        });
+
         const idx = filtered.findIndex((o) => o.id === orderId);
         if (cancelled) return;
         setPrevId(idx > 0 ? filtered[idx - 1].id : null);
-        setNextId(idx >= 0 && idx < filtered.length - 1 ? filtered[idx + 1].id : null);
+        setNextId(
+          idx >= 0 && idx < filtered.length - 1 ? filtered[idx + 1].id : null
+        );
       } catch {
         if (!cancelled) {
           setPrevId(null);
@@ -124,10 +190,27 @@ export default function ViewOrderPage() {
       if (start == null) return;
       const end = e.changedTouches[0].clientX;
       const deltaX = end - start;
+
+      // When a photo is fullscreen, never change order — only next/prev photo if more than one
+      if (fullscreenImage) {
+        if (order?.photos && order.photos.length > 1) {
+          const urls = order.photos.map((p) => getPhotoUrl(p) || p);
+          const idx = urls.indexOf(fullscreenImage);
+          if (idx >= 0) {
+            if (deltaX > SWIPE_THRESHOLD_PX && idx > 0) {
+              setFullscreenImage(urls[idx - 1]);
+            } else if (deltaX < -SWIPE_THRESHOLD_PX && idx < urls.length - 1) {
+              setFullscreenImage(urls[idx + 1]);
+            }
+          }
+        }
+        return;
+      }
+
       if (deltaX > SWIPE_THRESHOLD_PX) goToPrev();
       else if (deltaX < -SWIPE_THRESHOLD_PX) goToNext();
     },
-    [goToPrev, goToNext]
+    [goToPrev, goToNext, fullscreenImage, order]
   );
 
   if (isLoading) {
@@ -212,19 +295,19 @@ export default function ViewOrderPage() {
       <div className="p-3 space-y-2">
         {/* 1. Customer ID */}
         <div className="border-b border-gray-100 pb-2">
-          <label className="text-xs font-medium text-gray-500 block mb-0.5">
+          <label className="text-sm font-medium text-gray-500 block mb-0.5">
             Customer ID
           </label>
-          <p className="text-sm text-gray-900">{order.customer_id}</p>
+          <p className="text-base text-gray-900">{order.customer_id}</p>
         </div>
 
         {/* 2. Details */}
         {order.details && (
           <div className="border-b border-gray-100 pb-2">
-            <label className="text-xs font-medium text-gray-500 block mb-0.5">
+            <label className="text-sm font-medium text-gray-500 block mb-0.5">
               Details
             </label>
-            <p className="text-sm text-gray-900 whitespace-pre-wrap">
+            <p className="text-base text-gray-900 whitespace-pre-wrap">
               {order.details}
             </p>
           </div>
@@ -233,10 +316,10 @@ export default function ViewOrderPage() {
         {/* 3. Price */}
         {order.price !== null && (
           <div className="border-b border-gray-100 pb-2">
-            <label className="text-xs font-medium text-gray-500 block mb-0.5">
+            <label className="text-sm font-medium text-gray-500 block mb-0.5">
               Price
             </label>
-            <p className="text-sm text-gray-900">
+            <p className="text-base text-gray-900">
               {formatCurrency(order.price)}
             </p>
           </div>
@@ -245,10 +328,10 @@ export default function ViewOrderPage() {
         {/* 4. Photo */}
         {order.photos && order.photos.length > 0 && (
           <div className="border-b border-gray-100 pb-2">
-            <label className="text-xs font-medium text-gray-500 block mb-1">
+            <label className="text-sm font-medium text-gray-500 block mb-1">
               Photo
             </label>
-            <div className="space-y-2">
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1">
               {order.photos.map((photoUrl, index) => {
                 const displayUrl = getPhotoUrl(photoUrl) || photoUrl;
                 return (
@@ -256,7 +339,7 @@ export default function ViewOrderPage() {
                   key={index}
                   type="button"
                   onClick={() => setFullscreenImage((current) => (current === displayUrl ? null : displayUrl))}
-                  className="relative w-full h-[150px] rounded-lg overflow-hidden border border-gray-300 bg-gray-100 block text-left"
+                  className="relative shrink-0 w-[150px] h-[150px] rounded-lg overflow-hidden border border-gray-300 bg-gray-100 block text-left"
                 >
                   <Image
                     src={displayUrl}
@@ -287,29 +370,29 @@ export default function ViewOrderPage() {
 
         {/* 5. Pickup/Delivery */}
         <div className="border-b border-gray-100 pb-2">
-          <label className="text-xs font-medium text-gray-500 block mb-0.5">
+          <label className="text-sm font-medium text-gray-500 block mb-0.5">
             Pickup/Delivery
           </label>
-          <p className="text-sm text-gray-900">{order.pickup_delivery}</p>
+          <p className="text-base text-gray-900">{order.pickup_delivery}</p>
         </div>
 
         {/* 6. Date/Time */}
         <div className="border-b border-gray-100 pb-2">
-          <label className="text-xs font-medium text-gray-500 block mb-0.5">
+          <label className="text-sm font-medium text-gray-500 block mb-0.5">
             Date/Time
           </label>
-          <p className="text-sm text-gray-900">
+          <p className="text-base text-gray-900">
             {formatDate(order.delivery_date_time)}
           </p>
         </div>
 
         {/* 7. Payment Status */}
         <div className="border-b border-gray-100 pb-2">
-          <label className="text-xs font-medium text-gray-500 block mb-0.5">
+          <label className="text-sm font-medium text-gray-500 block mb-0.5">
             Payment Status
           </label>
           <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-sm font-medium ${
               order.payment_status === "Paid"
                 ? "bg-green-100 text-green-800"
                 : order.payment_status === "Pending"
@@ -323,10 +406,10 @@ export default function ViewOrderPage() {
 
         {/* 8. Status */}
         <div className="border-b border-gray-100 pb-2">
-          <label className="text-xs font-medium text-gray-500 block mb-0.5">
+          <label className="text-sm font-medium text-gray-500 block mb-0.5">
             Status
           </label>
-          <p className="text-sm text-gray-900">{order.status}</p>
+          <p className="text-base text-gray-900">{order.status}</p>
         </div>
       </div>
 

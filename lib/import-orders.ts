@@ -112,6 +112,53 @@ function parsePhotos(photosString: string): string[] {
     .filter((p) => p.length > 0);
 }
 
+/**
+ * Relation between CSV path and AppSheet image URL:
+ * - CSV path:   Orders_Images/82d7867d.Photo.043722.jpg
+ * - URL param: fileName=Orders_Images%2F82d7867d.Photo.043722.jpg  (path with / → %2F)
+ * - Full URL:  https://www.appsheet.com/image/getimageurl?appName=...&tableName=Orders&fileName=<encoded path>&...
+ */
+function buildAppSheetImageUrl(path: string): string | null {
+  const appName = process.env.NEXT_PUBLIC_APPSHEET_IMAGE_APP_NAME;
+  const tableName = process.env.NEXT_PUBLIC_APPSHEET_IMAGE_TABLE_NAME || "Orders";
+  const appVersion = process.env.NEXT_PUBLIC_APPSHEET_IMAGE_APP_VERSION;
+  const signature = process.env.NEXT_PUBLIC_APPSHEET_IMAGE_SIGNATURE;
+  if (!appName || !path) return null;
+  const fileName = encodeURIComponent(path.trim());
+  let url = `https://www.appsheet.com/image/getimageurl?appName=${encodeURIComponent(appName)}&tableName=${encodeURIComponent(tableName)}&fileName=${fileName}`;
+  if (appVersion) url += `&appVersion=${encodeURIComponent(appVersion)}`;
+  if (signature) url += `&signature=${encodeURIComponent(signature.trim())}`;
+  return url;
+}
+
+/** If the photo is an external URL (e.g. Google or AppSheet), fetch and upload to Supabase via API; return the new URL. If it's an AppSheet path and env is set, build getimageurl and try that. Otherwise return as-is. */
+async function resolvePhotoUrl(photo: string): Promise<string> {
+  const trimmed = photo.trim();
+  if (!trimmed) return trimmed;
+
+  let urlToFetch: string;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    urlToFetch = trimmed;
+  } else {
+    const appSheetUrl = buildAppSheetImageUrl(trimmed);
+    if (!appSheetUrl) return trimmed;
+    urlToFetch = appSheetUrl;
+  }
+
+  try {
+    const res = await fetch("/api/import-photo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: urlToFetch }),
+    });
+    const data = await res.json();
+    if (!res.ok) return trimmed;
+    return typeof data?.url === "string" ? data.url : trimmed;
+  } catch {
+    return trimmed;
+  }
+}
+
 export async function importOrdersFromCSV(csvData: CSVOrderRow[]): Promise<void> {
   const errors: string[] = [];
   let successCount = 0;
@@ -123,7 +170,8 @@ export async function importOrdersFromCSV(csvData: CSVOrderRow[]): Promise<void>
         continue;
       }
 
-      const photos = parsePhotos(row.photos || "");
+      const rawPhotos = parsePhotos(row.photos || "");
+      const photos = await Promise.all(rawPhotos.map(resolvePhotoUrl));
 
       const { error } = await supabase.from("orders").insert({
         order_id: row.order_id.trim(),

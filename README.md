@@ -127,6 +127,10 @@ If you haven't set up Supabase yet, you can:
 - `NEXTAUTH_SECRET`: Required for NextAuth (login). Use a random string, e.g. `openssl rand -base64 32`. In local dev, a fallback is used if unset.
 - `NEXTAUTH_URL`: (Optional) Set to `http://localhost:3000` for local dev to avoid warnings; in production set to your site URL.
 - `AUTH_PASSWORD`: (Optional) Shared login password; default is `pastorale`.
+- `NEXT_PUBLIC_APPSHEET_IMAGE_APP_NAME`: (Optional) AppSheet app name for image URLs. When your CSV has only paths like `Orders_Images/82d7867d.Photo.043722.jpg`, the importer builds the getimageurl URL and tries to fetch/upload. Example: `OrderDeliveries-719514345-23-10-04`.
+- `NEXT_PUBLIC_APPSHEET_IMAGE_TABLE_NAME`: (Optional) AppSheet table name for image URLs; default is `Orders`.
+- `NEXT_PUBLIC_APPSHEET_IMAGE_APP_VERSION`: (Optional) AppSheet app version (e.g. `1.000159`). Get the value from a working image URL in the browser.
+- `NEXT_PUBLIC_APPSHEET_IMAGE_SIGNATURE`: (Optional) AppSheet image URL signature. Required by many apps; without it you may get 400 Bad Request. Copy the `signature=` value from a working getimageurl URL (e.g. from right‑click → Copy image address in AppSheet). Note: some apps use a per-image signature that may expire; if import still fails, your CSV may need full image URLs including signature per row.
 ## Deployment
 
 This project is configured for deployment to Vercel with CI/CD via GitHub Actions.

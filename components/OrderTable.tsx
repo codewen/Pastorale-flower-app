@@ -26,7 +26,7 @@ export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
   const router = useRouter();
   const [sortColumn, setSortColumn] =
     useState<SortColumn>("delivery_date_time");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   const filteredOrders = useMemo(() => {
     let filtered = orders.filter((order) => {

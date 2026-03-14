@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { OrderTable } from "@/components/OrderTable";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,8 @@ type DeliveryDateKey = string; // YYYY-MM-DD in local time
 
 const ORDER_STATUSES: OrderStatus[] = ["Ordered", "Ready", "Done"];
 const STATUS_STORAGE_KEY = "orders-status-filter";
+const PICKUP_DELIVERY_STORAGE_KEY = "orders-pickup-delivery-filter";
+const DATE_FILTER_STORAGE_KEY = "orders-date-filter";
 
 function getStoredStatusFilter(): OrderStatus[] | null {
   if (typeof window === "undefined") return null;
@@ -38,6 +40,33 @@ function getStoredStatusFilter(): OrderStatus[] | null {
       return parsed as OrderStatus[];
     }
     return null;
+  } catch {
+    return null;
+  }
+}
+
+function getStoredPickupDeliveryFilter(): PickupDeliveryFilter | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(PICKUP_DELIVERY_STORAGE_KEY);
+    if (raw === "All" || raw === "Pickup" || raw === "Delivery") return raw;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function getStoredDateFilter(): DeliveryDateKey[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(DATE_FILTER_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return null;
+    const valid = parsed.every(
+      (x) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x)
+    );
+    return valid ? (parsed as DeliveryDateKey[]) : null;
   } catch {
     return null;
   }
@@ -61,36 +90,41 @@ export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
-  const [statusFilter, setStatusFilter] = useState<OrderStatus[]>(["Ordered"]);
+  const [statusFilter, setStatusFilter] = useState<OrderStatus[]>(
+    () => getStoredStatusFilter() ?? ["Ordered"]
+  );
   const [pickupDeliveryFilter, setPickupDeliveryFilter] =
-    useState<PickupDeliveryFilter>("All");
-  const [dateFilter, setDateFilter] = useState<DeliveryDateKey[]>([]);
+    useState<PickupDeliveryFilter>(
+      () => getStoredPickupDeliveryFilter() ?? "All"
+    );
+  const [dateFilter, setDateFilter] = useState<DeliveryDateKey[]>(
+    () => getStoredDateFilter() ?? []
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
-  const isFirstPersistRun = useRef(true);
 
   useEffect(() => {
     loadOrders();
   }, []);
 
-  // Restore status filter when returning to the list (e.g. back from order detail)
+  // Persist filters so they survive navigation (e.g. into order detail and back) and refresh
   useEffect(() => {
-    const stored = getStoredStatusFilter();
-    if (stored !== null) {
-      setStatusFilter(stored);
-    }
-  }, []);
-
-  // Persist status filter so it survives navigation and refresh (skip first run so we don't overwrite stored value with initial state before restore)
-  useEffect(() => {
-    if (isFirstPersistRun.current) {
-      isFirstPersistRun.current = false;
-      return;
-    }
     sessionStorage.setItem(STATUS_STORAGE_KEY, JSON.stringify(statusFilter));
   }, [statusFilter]);
+  useEffect(() => {
+    sessionStorage.setItem(
+      PICKUP_DELIVERY_STORAGE_KEY,
+      String(pickupDeliveryFilter)
+    );
+  }, [pickupDeliveryFilter]);
+  useEffect(() => {
+    sessionStorage.setItem(
+      DATE_FILTER_STORAGE_KEY,
+      JSON.stringify(dateFilter)
+    );
+  }, [dateFilter]);
 
   useEffect(() => {
     let filtered = orders;

@@ -256,7 +256,7 @@ export default function ViewOrderPage() {
                   key={index}
                   type="button"
                   onClick={() => setFullscreenImage((current) => (current === displayUrl ? null : displayUrl))}
-                  className="relative w-full h-80 rounded-lg overflow-hidden border border-gray-300 bg-gray-100 block text-left"
+                  className="relative w-full h-[150px] rounded-lg overflow-hidden border border-gray-300 bg-gray-100 block text-left"
                 >
                   <Image
                     src={displayUrl}

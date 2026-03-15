@@ -90,16 +90,12 @@ export default function OrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
-  const [statusFilter, setStatusFilter] = useState<OrderStatus[]>(
-    () => getStoredStatusFilter() ?? ["Ordered"]
-  );
+  // Initial state uses fixed defaults so server and client match (avoids hydration mismatch).
+  // Stored values are restored in useEffect after mount.
+  const [statusFilter, setStatusFilter] = useState<OrderStatus[]>(["Ordered"]);
   const [pickupDeliveryFilter, setPickupDeliveryFilter] =
-    useState<PickupDeliveryFilter>(
-      () => getStoredPickupDeliveryFilter() ?? "All"
-    );
-  const [dateFilter, setDateFilter] = useState<DeliveryDateKey[]>(
-    () => getStoredDateFilter() ?? []
-  );
+    useState<PickupDeliveryFilter>("All");
+  const [dateFilter, setDateFilter] = useState<DeliveryDateKey[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -107,6 +103,16 @@ export default function OrdersPage() {
 
   useEffect(() => {
     loadOrders();
+  }, []);
+
+  // Restore filters from sessionStorage after mount (client-only); keeps server/client first paint identical
+  useEffect(() => {
+    const storedStatus = getStoredStatusFilter();
+    if (storedStatus !== null) setStatusFilter(storedStatus);
+    const storedPickup = getStoredPickupDeliveryFilter();
+    if (storedPickup !== null) setPickupDeliveryFilter(storedPickup);
+    const storedDate = getStoredDateFilter();
+    if (storedDate !== null) setDateFilter(storedDate);
   }, []);
 
   // Persist filters so they survive navigation (e.g. into order detail and back) and refresh
@@ -241,16 +247,16 @@ export default function OrdersPage() {
         </div>
       </header>
 
-      {/* Filters: status (multi-select) + pickup/delivery */}
+      {/* Filters: status (multi-select) + pickup/delivery — hidden by default on all screen sizes; align with header (same horizontal padding as "Order" / content) */}
       <div
         className={`border-b border-gray-200 space-y-3 transition-all duration-300 ease-in-out overflow-hidden ${
           filtersExpanded
-            ? "max-h-96 opacity-100 p-4"
-            : "max-h-0 opacity-0 p-0 border-b-0 md:max-h-96 md:opacity-100 md:p-4 md:border-b"
+            ? "max-h-96 opacity-100 px-3 pt-3 pb-4 md:px-4 md:pt-4 md:pb-4"
+            : "max-h-0 opacity-0 p-0 border-b-0"
         }`}
       >
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-gray-500 mr-1">Status</span>
+          <span className="text-xs font-medium text-gray-500 w-[84px] shrink-0 text-right">Status</span>
           <button
             onClick={clearStatusFilter}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
@@ -280,7 +286,7 @@ export default function OrdersPage() {
           })}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-gray-500 mr-1">
+          <span className="text-xs font-medium text-gray-500 w-[84px] shrink-0 text-right">
             Pickup/Delivery
           </span>
           {(["All", "Pickup", "Delivery"] as const).map((value) => (
@@ -298,7 +304,7 @@ export default function OrdersPage() {
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-gray-500 mr-1">Date</span>
+          <span className="text-xs font-medium text-gray-500 w-[84px] shrink-0 text-right">Date</span>
           <button
             onClick={clearDateFilter}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
@@ -348,15 +354,17 @@ export default function OrdersPage() {
         )}
       </main>
 
-      {/* Footer Navigation */}
+      {/* Footer Navigation — same icon row height so New Order and status tabs align vertically */}
       <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
         <div className="flex items-center justify-around p-4">
           <button
             onClick={() => router.push("/orders/new")}
             className="flex flex-col items-center gap-1 text-blue-600"
           >
-            <div className="bg-blue-600 text-white rounded-full p-2">
-              <Plus className="h-5 w-5" />
+            <div className="h-5 w-5 flex items-center justify-center shrink-0">
+              <div className="bg-blue-600 text-white rounded-full p-1 flex items-center justify-center">
+                <Plus className="h-3 w-3" />
+              </div>
             </div>
             <span className="text-xs font-medium">New Order</span>
           </button>
@@ -372,7 +380,9 @@ export default function OrdersPage() {
                     isActive ? "text-blue-600" : "text-gray-500"
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
+                  <div className="h-5 w-5 flex items-center justify-center shrink-0">
+                    <Icon className="h-4 w-4" />
+                  </div>
                   <span className="text-xs font-medium">{label}</span>
                   {isActive ? <div className="h-0.5 w-8 bg-blue-600" /> : null}
                 </button>

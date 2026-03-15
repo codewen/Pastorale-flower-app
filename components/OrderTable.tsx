@@ -116,49 +116,49 @@ export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
         <thead>
           <tr className="border-b border-gray-200">
             <th
-              className="text-left px-2 py-3 md:px-3 md:py-2 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[44px]"
+              className="text-left px-2 py-2 md:px-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[40px]"
               onClick={() => handleSort("delivery_date_time")}
             >
               Date/Time
               <SortIcon column="delivery_date_time" />
             </th>
             <th
-              className="text-left px-2 py-3 md:px-3 md:py-2 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[44px]"
+              className="text-left px-2 py-2 md:px-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[40px]"
               onClick={() => handleSort("pickup_delivery")}
             >
               Pickup/Delivery
               <SortIcon column="pickup_delivery" />
             </th>
             <th
-              className="text-left px-2 py-3 md:px-3 md:py-2 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[44px]"
+              className="text-left px-2 py-2 md:px-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[40px]"
               onClick={() => handleSort("customer_id")}
             >
               Customer ID
               <SortIcon column="customer_id" />
             </th>
             <th
-              className="text-left px-2 py-3 md:px-3 md:py-2 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[44px]"
+              className="text-left px-2 py-2 md:px-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[40px]"
               onClick={() => handleSort("price")}
             >
               Price
               <SortIcon column="price" />
             </th>
             <th
-              className="text-left px-2 py-3 md:px-3 md:py-2 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[44px]"
+              className="text-left px-2 py-2 md:px-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[40px]"
               onClick={() => handleSort("payment_status")}
             >
               Payment Status
               <SortIcon column="payment_status" />
             </th>
             <th
-              className="text-left px-2 py-3 md:px-3 md:py-2 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[44px]"
+              className="text-left px-2 py-2 md:px-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[40px]"
               onClick={() => handleSort("details")}
             >
               Details
               <SortIcon column="details" />
             </th>
             <th
-              className="text-left px-2 py-3 md:px-3 md:py-2 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[44px]"
+              className="text-left px-2 py-2 md:px-3 font-bold text-sm text-gray-700 cursor-pointer hover:bg-gray-50 select-none leading-tight min-h-[40px]"
               onClick={() => handleSort("status")}
             >
               Status
@@ -166,7 +166,7 @@ export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
             </th>
           </tr>
         </thead>
-        <tbody className="text-gray-600">
+        <tbody className="text-gray-600 leading-tight">
           {filteredOrders.length === 0 ? (
             <tr>
               <td colSpan={7} className="text-center p-6 md:p-8 text-gray-500">
@@ -180,17 +180,17 @@ export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
                 onClick={() => handleRowClick(order.id)}
                 className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
               >
-                <td className="p-2 md:p-3 text-sm whitespace-nowrap">
+                <td className="py-1.5 px-2 md:px-3 text-sm whitespace-nowrap leading-tight">
                   {formatDate(order.delivery_date_time)}
                 </td>
-                <td className="p-2 md:p-3 text-sm">{order.pickup_delivery}</td>
-                <td className="p-2 md:p-3 text-sm">{order.customer_id}</td>
-                <td className="p-2 md:p-3 text-sm">
+                <td className="py-1.5 px-2 md:px-3 text-sm leading-tight">{order.pickup_delivery}</td>
+                <td className="py-1.5 px-2 md:px-3 text-sm leading-tight">{order.customer_id}</td>
+                <td className="py-1.5 px-2 md:px-3 text-sm leading-tight">
                   {formatCurrency(order.price)}
                 </td>
-                <td className="p-2 md:p-3 text-sm">
+                <td className="py-1.5 px-2 md:px-3 text-sm leading-tight">
                   <span
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium leading-tight ${
                       order.payment_status === "Paid"
                         ? "bg-green-100 text-green-800"
                         : order.payment_status === "Pending"
@@ -201,12 +201,12 @@ export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
                     {order.payment_status}
                   </span>
                 </td>
-                <td className="p-2 md:p-3 text-sm max-w-md">
+                <td className="py-1.5 px-2 md:px-3 text-sm max-w-md leading-tight">
                   <div className="truncate" title={order.details || ""}>
                     {order.details || "-"}
                   </div>
                 </td>
-                <td className="p-2 md:p-3 text-sm">
+                <td className="py-1.5 px-2 md:px-3 text-sm leading-tight">
                   <span className="inline-flex items-center">
                     {order.status}
                     <span className="ml-2">→</span>

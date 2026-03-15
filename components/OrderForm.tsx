@@ -23,6 +23,15 @@ interface OrderFormProps {
 
 const EMPTY_PHOTOS: string[] = [];
 
+/** Today at 10:00 in local time, formatted for datetime-local input (YYYY-MM-DDTHH:mm). */
+function getDefaultDateTimeLocal(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}T10:00`;
+}
+
 export function OrderForm({
   initialData,
   existingPhotos,
@@ -38,9 +47,9 @@ export function OrderForm({
     customer_id: initialData?.customer_id || "",
     details: initialData?.details || "",
     status: initialData?.status || "Ordered",
-    delivery_date_time: initialData?.delivery_date_time || "",
+    delivery_date_time: initialData?.delivery_date_time || getDefaultDateTimeLocal(),
     pickup_delivery: initialData?.pickup_delivery || "Pickup",
-    payment_status: initialData?.payment_status || "Pending",
+    payment_status: initialData?.payment_status || "Paid",
     price: initialData?.price || null,
     photos: [],
   });

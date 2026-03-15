@@ -29,8 +29,8 @@ export default function NewOrderPage() {
 
     try {
       setIsLoading(true);
-      await createOrder(payload);
-      router.push("/orders");
+      const order = await createOrder(payload);
+      router.push(`/orders/${order.id}`);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to create order. Please try again.";

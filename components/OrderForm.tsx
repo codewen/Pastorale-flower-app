@@ -240,24 +240,22 @@ export function OrderForm({
 
       {/* Status */}
       <div>
-        <Label htmlFor="status" className="mb-2 block">
-          Status
-        </Label>
-        <select
-          id="status"
-          value={formData.status}
-          onChange={(e) =>
-            setFormData((prev) => ({
-              ...prev,
-              status: e.target.value as OrderStatus,
-            }))
-          }
-          className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
-        >
-          <option value="Ordered">Ordered</option>
-          <option value="Ready">Ready</option>
-          <option value="Done">Done</option>
-        </select>
+        <Label className="mb-2 block">Status</Label>
+        <div className="flex flex-wrap gap-2">
+          {(["Ordered", "Ready", "Done"] as OrderStatus[]).map((status) => (
+            <Button
+              type="button"
+              key={status}
+              size="sm"
+              variant={formData.status === status ? "default" : "outline"}
+              onClick={() =>
+                setFormData((prev) => ({ ...prev, status }))
+              }
+            >
+              {status}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* Actions */}

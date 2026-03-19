@@ -126,6 +126,10 @@ export default function ViewOrderPage() {
         let filtered = all;
 
         const statusFilter = getStoredStatusFilter();
+        const doneOnly =
+          statusFilter !== null &&
+          statusFilter.length === 1 &&
+          statusFilter[0] === "Done";
         if (statusFilter !== null && statusFilter.length > 0) {
           filtered = filtered.filter((o) => statusFilter.includes(o.status));
         }
@@ -143,14 +147,14 @@ export default function ViewOrderPage() {
           );
         }
 
-        // Sort by delivery_date_time asc (earliest first), then created_at asc — matches list page default
+        // Matches list default: asc except Done-only tab (newest delivery first)
         filtered = [...filtered].sort((a, b) => {
           const tA = new Date(a.delivery_date_time).getTime();
           const tB = new Date(b.delivery_date_time).getTime();
-          if (tA !== tB) return tA - tB;
-          return (
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
+          if (tA !== tB) return doneOnly ? tB - tA : tA - tB;
+          const cA = new Date(a.created_at).getTime();
+          const cB = new Date(b.created_at).getTime();
+          return doneOnly ? cB - cA : cA - cB;
         });
 
         const idx = filtered.findIndex((o) => o.id === orderId);

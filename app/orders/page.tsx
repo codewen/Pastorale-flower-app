@@ -350,7 +350,15 @@ export default function OrdersPage() {
             Loading orders...
           </div>
         ) : (
-          <OrderTable orders={filteredOrders} searchQuery={searchQuery} />
+          <OrderTable
+            orders={filteredOrders}
+            searchQuery={searchQuery}
+            deliverySortDefault={
+              statusFilter.length === 1 && statusFilter[0] === "Done"
+                ? "desc"
+                : "asc"
+            }
+          />
         )}
       </main>
 

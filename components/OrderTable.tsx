@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Order } from "@/types/order";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,8 @@ import { ArrowUp, ArrowDown } from "lucide-react";
 interface OrderTableProps {
   orders: Order[];
   searchQuery?: string;
+  /** When "desc", default column sort is newest delivery first (e.g. Done tab). */
+  deliverySortDefault?: "asc" | "desc";
 }
 
 type SortColumn =
@@ -22,11 +24,21 @@ type SortColumn =
 
 type SortDirection = "asc" | "desc";
 
-export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
+export function OrderTable({
+  orders,
+  searchQuery = "",
+  deliverySortDefault = "asc",
+}: OrderTableProps) {
   const router = useRouter();
   const [sortColumn, setSortColumn] =
     useState<SortColumn>("delivery_date_time");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [sortDirection, setSortDirection] =
+    useState<SortDirection>(deliverySortDefault);
+
+  useEffect(() => {
+    setSortColumn("delivery_date_time");
+    setSortDirection(deliverySortDefault);
+  }, [deliverySortDefault]);
 
   const filteredOrders = useMemo(() => {
     let filtered = orders.filter((order) => {
@@ -79,10 +91,12 @@ export function OrderTable({ orders, searchQuery = "" }: OrderTableProps) {
 
       if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
       if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-      // Same value: tie-break by created_at so order is stable (earlier created first)
+      // Same primary value: tie-break by created_at (direction matches list default)
       const aCreated = new Date(a.created_at).getTime();
       const bCreated = new Date(b.created_at).getTime();
-      return aCreated - bCreated;
+      return sortDirection === "asc"
+        ? aCreated - bCreated
+        : bCreated - aCreated;
     });
 
     return filtered;

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { Edit, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { FullscreenZoomableImage } from "@/components/FullscreenZoomableImage";
 
 const STATUS_STORAGE_KEY = "orders-status-filter";
 const PICKUP_DELIVERY_STORAGE_KEY = "orders-pickup-delivery-filter";
@@ -195,26 +196,12 @@ export default function ViewOrderPage() {
       const end = e.changedTouches[0].clientX;
       const deltaX = end - start;
 
-      // When a photo is fullscreen, never change order — only next/prev photo if more than one
-      if (fullscreenImage) {
-        if (order?.photos && order.photos.length > 1) {
-          const urls = order.photos.map((p) => getPhotoUrl(p) || p);
-          const idx = urls.indexOf(fullscreenImage);
-          if (idx >= 0) {
-            if (deltaX > SWIPE_THRESHOLD_PX && idx > 0) {
-              setFullscreenImage(urls[idx - 1]);
-            } else if (deltaX < -SWIPE_THRESHOLD_PX && idx < urls.length - 1) {
-              setFullscreenImage(urls[idx + 1]);
-            }
-          }
-        }
-        return;
-      }
+      if (fullscreenImage) return;
 
       if (deltaX > SWIPE_THRESHOLD_PX) goToPrev();
       else if (deltaX < -SWIPE_THRESHOLD_PX) goToNext();
     },
-    [goToPrev, goToNext, fullscreenImage, order]
+    [goToPrev, goToNext, fullscreenImage]
   );
 
   if (isLoading) {
@@ -355,19 +342,14 @@ export default function ViewOrderPage() {
                 </button>
               ); })}
             </div>
-            {fullscreenImage && (
-              <button
-                type="button"
-                onClick={() => setFullscreenImage(null)}
-                className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
-                aria-label="Close fullscreen"
-              >
-                <img
-                  src={fullscreenImage}
-                  alt="Fullscreen"
-                  className="max-w-full max-h-full object-contain"
-                />
-              </button>
+            {fullscreenImage && order.photos && (
+              <FullscreenZoomableImage
+                src={fullscreenImage}
+                alt="Fullscreen"
+                onClose={() => setFullscreenImage(null)}
+                galleryUrls={order.photos.map((p) => getPhotoUrl(p) || p)}
+                onGalleryIndexChange={setFullscreenImage}
+              />
             )}
           </div>
         )}

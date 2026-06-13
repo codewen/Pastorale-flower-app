@@ -120,6 +120,12 @@ If you haven't set up Supabase yet, you can:
 - Use the status tabs at the top (Ordered, Ready, Done) to filter orders
 - Use the search bar to search by customer ID, details, or order ID
 
+### Managing Blackout Dates
+
+1. Open the **Blackout Dates** tab in the footer navigation
+2. Tap a day on the calendar to block pickup, delivery, or set a partial pickup hour
+3. Changes appear on the storefront within about 5 minutes (API cache TTL)
+
 ## Environment Variables
 
 - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL

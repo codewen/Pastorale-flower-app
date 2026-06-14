@@ -45,6 +45,38 @@ export type Database = {
           updated_at?: string;
         };
       };
+      blackout_dates: {
+        Row: {
+          id: string;
+          date: string;
+          disable_pickup: boolean;
+          disable_delivery: boolean;
+          pickup_start_hour: number | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          date: string;
+          disable_pickup?: boolean;
+          disable_delivery?: boolean;
+          pickup_start_hour?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          date?: string;
+          disable_pickup?: boolean;
+          disable_delivery?: boolean;
+          pickup_start_hour?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
   };
 };

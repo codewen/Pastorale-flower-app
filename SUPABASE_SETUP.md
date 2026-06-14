@@ -68,3 +68,9 @@ After setting up, you can test the connection by:
 1. Running `npm run dev`
 2. Navigating to `/import` to import your order data
 3. Navigating to `/orders` to see your orders
+
+## 6. Blackout Dates Table
+
+Run the SQL in [scripts/blackout-dates-migration.sql](scripts/blackout-dates-migration.sql) in the Supabase SQL Editor. This creates the `blackout_dates` table and seeds dates from the Shopify theme.
+
+The storefront cart datepicker reads blackout dates from the Pastorale app's public API (`GET /api/blackout-dates`). Manage dates in the app under **Blackout Dates** — no theme redeploy needed for date changes.

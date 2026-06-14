@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { OrderTable } from "@/components/OrderTable";
+import { AppNav } from "@/components/AppNav";
 import { Input } from "@/components/ui/input";
 import { getOrders } from "@/lib/supabase/orders";
 import { Order, OrderStatus, PickupDelivery } from "@/types/order";
@@ -339,7 +340,7 @@ export default function OrdersPage() {
       </div>
 
       {/* Orders Table - extra bottom padding so last row scrolls above fixed footer; min-w-0 so table can scroll on md/lg */}
-      <main className="p-1 pb-24 min-w-0">
+      <main className="p-1 pb-36 min-w-0">
         {message && (
           <div className="mb-4 p-4 rounded bg-red-100 text-red-800">
             {message}
@@ -362,9 +363,9 @@ export default function OrdersPage() {
         )}
       </main>
 
-      {/* Footer Navigation — same icon row height so New Order and status tabs align vertically */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-        <div className="flex items-center justify-around p-4">
+      {/* Footer Navigation — order actions + app-level tabs */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
+        <div className="flex items-center justify-around p-4 border-b border-gray-100">
           <button
             onClick={() => router.push("/orders/new")}
             className="flex flex-col items-center gap-1 text-blue-600"
@@ -398,6 +399,7 @@ export default function OrdersPage() {
             })}
           </div>
         </div>
+        <AppNav />
       </footer>
     </div>
   );

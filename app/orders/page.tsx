@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { OrderTable } from "@/components/OrderTable";
-import { AppNav } from "@/components/AppNav";
+import { AppMoreMenu } from "@/components/AppMoreMenu";
 import { Input } from "@/components/ui/input";
 import { getOrders } from "@/lib/supabase/orders";
 import { Order, OrderStatus, PickupDelivery } from "@/types/order";
@@ -197,6 +197,7 @@ export default function OrdersPage() {
       {/* Header with search in top bar */}
       <header className="border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="flex items-center gap-2 p-3 md:p-4">
+          <AppMoreMenu />
           <h1 className="text-xl font-semibold shrink-0 flex items-center gap-2">
             Order
             {!isLoading && (
@@ -363,9 +364,9 @@ export default function OrdersPage() {
         )}
       </main>
 
-      {/* Footer Navigation — order actions + app-level tabs */}
+      {/* Footer — order actions only */}
       <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
-        <div className="flex items-center justify-around p-4 border-b border-gray-100">
+        <div className="flex items-center justify-around p-4">
           <button
             onClick={() => router.push("/orders/new")}
             className="flex flex-col items-center gap-1 text-blue-600"
@@ -399,7 +400,6 @@ export default function OrdersPage() {
             })}
           </div>
         </div>
-        <AppNav />
       </footer>
     </div>
   );

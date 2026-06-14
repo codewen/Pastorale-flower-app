@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
-import { AppNav } from "@/components/AppNav";
+import { AppMoreMenu } from "@/components/AppMoreMenu";
 import { BlackoutCalendar } from "@/components/BlackoutCalendar";
 import type { BlackoutDate } from "@/types/blackout-date";
 
@@ -80,7 +80,10 @@ export default function BlackoutDatesPage() {
     <div className="min-h-screen bg-white min-w-0">
       <header className="border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="flex items-center justify-between gap-2 p-3 md:p-4">
-          <h1 className="text-xl font-semibold">Blackout Dates</h1>
+          <div className="flex items-center gap-2 min-w-0">
+            <AppMoreMenu />
+            <h1 className="text-xl font-semibold truncate">Blackout Dates</h1>
+          </div>
           <button
             type="button"
             onClick={loadEntries}
@@ -92,7 +95,7 @@ export default function BlackoutDatesPage() {
         </div>
       </header>
 
-      <main className="p-3 md:p-4 pb-28 max-w-3xl mx-auto">
+      <main className="p-3 md:p-4 pb-8 max-w-3xl mx-auto">
         {message ? (
           <div className="mb-4 p-4 rounded bg-red-100 text-red-800">{message}</div>
         ) : null}
@@ -109,10 +112,6 @@ export default function BlackoutDatesPage() {
           />
         )}
       </main>
-
-      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
-        <AppNav />
-      </footer>
     </div>
   );
 }

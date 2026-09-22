@@ -94,15 +94,15 @@ export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
         [order.shippingAddress.province, order.shippingAddress.zip].filter(Boolean).join(" "),
       ].filter(Boolean).join(", ")
     : "";
+  const delivery = attribute(custom, "delivery") || order.shippingLines.nodes[0]?.title || "delivery";
+  const pickupDelivery = /pickup|pick up|store/i.test(delivery) ? "Pickup" : "Delivery";
   const details = [
     ...productLines,
     messageCard ? `Message Card: ${messageCard}` : "",
-    address ? `Address: ${address}` : "",
+    pickupDelivery === "Delivery" && address ? `Address: ${address}` : "",
     deliveryInstructions ? `Delivery Instructions: ${deliveryInstructions}` : "",
-    "Delivery Fee: 35",
+    pickupDelivery === "Delivery" ? "Delivery Fee: 35" : "",
   ].filter(Boolean).join("\n");
-  const delivery = attribute(custom, "delivery") || order.shippingLines.nodes[0]?.title || "delivery";
-  const pickupDelivery = /pickup|pick up|store/i.test(delivery) ? "Pickup" : "Delivery";
 
   return {
     order_id: order.name,

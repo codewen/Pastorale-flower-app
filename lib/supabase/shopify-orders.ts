@@ -1,6 +1,15 @@
 import { supabase } from "./client";
 import type { ShopifyReviewStatus, ShopifyStagedOrder } from "@/types/shopify";
 
+export async function getShopifyReviewCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from("shopify_orders")
+    .select("id", { count: "exact", head: true })
+    .in("review_status", ["New", "In review"]);
+  if (error) throw new Error(`Failed to load Shopify review count: ${error.message}`);
+  return count || 0;
+}
+
 export async function getShopifyStagedOrders(): Promise<ShopifyStagedOrder[]> {
   const { data, error } = await supabase
     .from("shopify_orders")

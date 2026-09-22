@@ -3,6 +3,7 @@
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Menu, CalendarOff, ClipboardList, ShoppingBag } from "lucide-react";
+import { getShopifyReviewCount } from "@/lib/supabase/shopify-orders";
 
 type MenuItem = {
   label: string;
@@ -31,6 +32,7 @@ export function AppMoreMenu() {
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [shopifyReviewCount, setShopifyReviewCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
 
   const isBlackout =
@@ -53,17 +55,36 @@ export function AppMoreMenu() {
     setOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    let active = true;
+    const loadCount = async () => {
+      try {
+        const count = await getShopifyReviewCount();
+        if (active) setShopifyReviewCount(count);
+      } catch {
+        // The menu remains usable if the review queue is temporarily unavailable.
+      }
+    };
+    loadCount();
+    const interval = window.setInterval(loadCount, 30_000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, []);
+
   return (
     <div className="relative shrink-0" ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="p-2 -ml-2 hover:bg-gray-100 rounded"
-        aria-label="More options"
+        aria-label={shopifyReviewCount > 0 ? `More options, ${shopifyReviewCount} Shopify orders awaiting review` : "More options"}
         aria-expanded={open}
         aria-haspopup="menu"
       >
         <Menu className="h-5 w-5 text-gray-700" />
+        {shopifyReviewCount > 0 ? <span aria-hidden="true" className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500" /> : null}
       </button>
       {open ? (
         <div
@@ -83,6 +104,7 @@ export function AppMoreMenu() {
             >
               <Icon className="h-4 w-4 shrink-0" />
               {label}
+              {href === SHOPIFY_ITEM.href && shopifyReviewCount > 0 ? <span aria-label={`${shopifyReviewCount} awaiting review`} className="ml-auto h-2.5 w-2.5 rounded-full bg-red-500" /> : null}
             </button>
           ))}
         </div>

@@ -13,6 +13,7 @@ export interface ShopifyOrder {
   createdAt: string;
   displayFinancialStatus: string | null;
   displayFulfillmentStatus: string | null;
+  subtotalPriceSet: { shopMoney: { amount: string } };
   currentTotalPriceSet: { shopMoney: { amount: string } };
   customer: { id: string; email: string | null } | null;
   customAttributes: ShopifyCustomAttribute[];
@@ -39,6 +40,7 @@ const ORDER_FIELDS = `
   createdAt
   displayFinancialStatus
   displayFulfillmentStatus
+  subtotalPriceSet { shopMoney { amount } }
   currentTotalPriceSet { shopMoney { amount } }
   customer { id email }
   customAttributes { key value }

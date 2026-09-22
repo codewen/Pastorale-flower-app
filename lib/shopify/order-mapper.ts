@@ -71,6 +71,9 @@ export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
     delivery_date_time: parseDeliveryDate(custom.get("date"), custom.get("pickuptime"), order.createdAt),
     pickup_delivery: pickupDelivery,
     payment_status: mapPayment(order.displayFinancialStatus),
-    price: Number(order.currentTotalPriceSet.shopMoney.amount) || null,
+    // Use the merchandise subtotal only. Shopify's current total includes
+    // shipping (and may include taxes), which should not be copied into the
+    // app's order price.
+    price: Number(order.subtotalPriceSet.shopMoney.amount) || null,
   };
 }

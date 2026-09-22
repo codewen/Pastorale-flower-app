@@ -37,9 +37,9 @@ export async function updateShopifyStagedOrder(
 
 export async function approveShopifyStagedOrder(order: ShopifyStagedOrder) {
   const rawLineItems = order.raw_order && typeof order.raw_order === "object"
-    ? (order.raw_order as { lineItems?: { nodes?: Array<{ image?: { url?: string } | null }> } }).lineItems?.nodes || []
+    ? (order.raw_order as { lineItems?: { nodes?: Array<{ image?: { url?: string } | null; variant?: { image?: { url?: string } | null; product?: { featuredImage?: { url?: string } | null } | null } | null }> } }).lineItems?.nodes || []
     : [];
-  const productPhotos = Array.from(new Set(rawLineItems.map((item) => item.image?.url).filter((url): url is string => Boolean(url))));
+  const productPhotos = Array.from(new Set(rawLineItems.map((item) => item.image?.url || item.variant?.image?.url || item.variant?.product?.featuredImage?.url).filter((url): url is string => Boolean(url))));
   const { data: inserted, error: orderError } = await supabase
     .from("orders")
     .insert({

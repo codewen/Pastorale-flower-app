@@ -147,13 +147,7 @@ export async function registerShopifyWebhooks(webhookUrl: string) {
     {},
   );
 
-  const topics: ShopifyWebhookTopic[] = [
-    "ORDERS_CREATE",
-    "ORDERS_UPDATED",
-    "ORDERS_PAID",
-    "ORDERS_FULFILLED",
-    "ORDERS_CANCELLED",
-  ];
+  const topics: ShopifyWebhookTopic[] = ["ORDERS_CREATE"];
   const created: Array<{ id: string; topic: string; uri: string }> = [];
   const skipped: string[] = [];
 

@@ -11,13 +11,22 @@ function getSupabase() {
 }
 
 export async function syncShopifyOrder(order: ShopifyOrder) {
-  const { data, error } = await getSupabase()
+  const supabase = getSupabase();
+  const { data: existing, error: lookupError } = await supabase
     .from("orders")
-    .upsert(mapShopifyOrder(order), { onConflict: "order_id" })
+    .select("id")
+    .eq("order_id", order.name)
+    .maybeSingle();
+  if (lookupError) throw new Error(`Failed to check ${order.name}: ${lookupError.message}`);
+  if (existing) return { skipped: true, orderId: order.name };
+
+  const { data, error } = await supabase
+    .from("orders")
+    .insert(mapShopifyOrder(order))
     .select()
     .single();
   if (error) throw new Error(`Failed to sync ${order.name}: ${error.message}`);
-  return data;
+  return { skipped: false, order: data };
 }
 
 export async function syncShopifyOrderById(id: string) {
@@ -28,6 +37,8 @@ export async function syncShopifyOrders(query?: string) {
   const orders = await listShopifyOrders(query);
   const results = [];
   for (const order of orders) results.push(await syncShopifyOrder(order));
-  return { count: results.length };
+  return {
+    count: results.filter((result) => !result.skipped).length,
+    skipped: results.filter((result) => result.skipped).length,
+  };
 }
-

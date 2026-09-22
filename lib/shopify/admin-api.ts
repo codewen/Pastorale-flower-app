@@ -203,7 +203,7 @@ export async function listShopifyOrders(query = ""): Promise<ShopifyOrder[]> {
   const orders: ShopifyOrder[] = [];
   let after: string | null = null;
   do {
-    const data = await graphql<OrdersResponse>(
+    const data: OrdersResponse = await graphql<OrdersResponse>(
       `query Orders($after: String, $query: String) {
         orders(first: 100, after: $after, query: $query, sortKey: CREATED_AT, reverse: true) {
           nodes { ${ORDER_FIELDS} }

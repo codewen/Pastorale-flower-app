@@ -48,7 +48,7 @@ function parseDeliveryDate(dateValue: string | undefined, timeValue: string | un
   const day = Number(match[1]);
   const month = Number(match[2]);
   const year = Number(match[3]);
-  const time = parseTime(timeValue) || { hour: 10, minute: 0 };
+  const time = parseTime(timeValue) || { hour: 13, minute: 0 };
   const offset = sydneyOffsetHours(year, month, day);
   return new Date(Date.UTC(year, month - 1, day, time.hour - offset, time.minute)).toISOString();
 }

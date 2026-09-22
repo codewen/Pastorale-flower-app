@@ -5,6 +5,14 @@ function attributes(order: ShopifyOrder): Map<string, string> {
   return new Map(order.customAttributes.map(({ key, value }) => [key.trim().toLowerCase(), value.trim()]));
 }
 
+function attribute(attributesMap: Map<string, string>, ...keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = attributesMap.get(key);
+    if (value) return value;
+  }
+  return undefined;
+}
+
 function parseTime(value: string | undefined): { hour: number; minute: number } | null {
   if (!value) return null;
   const match = value.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
@@ -56,11 +64,29 @@ export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
     const variant = item.variant?.title && item.variant.title !== "Default Title" ? ` — ${item.variant.title}` : "";
     return `${item.title}${variant}${item.quantity > 1 ? ` × ${item.quantity}` : ""}`;
   });
-  const messageCard = custom.get("messagecard");
-  const details = [...productLines, messageCard ? `Message card: ${messageCard}` : ""]
-    .filter(Boolean)
-    .join("\n");
-  const delivery = custom.get("delivery") || order.shippingLines.nodes[0]?.title || "delivery";
+  const messageCard = attribute(custom, "messagecard", "message card", "card message");
+  const deliveryInstructions = attribute(
+    custom,
+    "deliveryinstructions",
+    "delivery instructions",
+    "delivery_instruction",
+    "delivery instruction",
+  ) || order.note?.trim();
+  const address = order.shippingAddress
+    ? [
+        order.shippingAddress.address1,
+        order.shippingAddress.address2,
+        order.shippingAddress.city,
+        [order.shippingAddress.province, order.shippingAddress.zip].filter(Boolean).join(" "),
+      ].filter(Boolean).join(", ")
+    : "";
+  const details = [
+    ...productLines,
+    messageCard ? `Message Card: ${messageCard}` : "",
+    address ? `Address: ${address}` : "",
+    deliveryInstructions ? `Delivery Instructions: ${deliveryInstructions}` : "",
+  ].filter(Boolean).join("\n");
+  const delivery = attribute(custom, "delivery") || order.shippingLines.nodes[0]?.title || "delivery";
   const pickupDelivery = /pickup|pick up|store/i.test(delivery) ? "Pickup" : "Delivery";
 
   return {

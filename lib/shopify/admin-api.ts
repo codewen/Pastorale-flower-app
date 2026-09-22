@@ -16,6 +16,15 @@ export interface ShopifyOrder {
   subtotalPriceSet: { shopMoney: { amount: string } };
   currentTotalPriceSet: { shopMoney: { amount: string } };
   customer: { id: string; email: string | null } | null;
+  shippingAddress: {
+    address1: string | null;
+    address2: string | null;
+    city: string | null;
+    province: string | null;
+    zip: string | null;
+    country: string | null;
+  } | null;
+  note: string | null;
   customAttributes: ShopifyCustomAttribute[];
   lineItems: {
     nodes: Array<{
@@ -43,6 +52,8 @@ const ORDER_FIELDS = `
   subtotalPriceSet { shopMoney { amount } }
   currentTotalPriceSet { shopMoney { amount } }
   customer { id email }
+  shippingAddress { address1 address2 city province zip country }
+  note
   customAttributes { key value }
   lineItems(first: 100) {
     nodes { title quantity variant { title } }

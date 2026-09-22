@@ -20,6 +20,11 @@ function instructionAttribute(attributesMap: Map<string, string>): string | unde
   return undefined;
 }
 
+function orderCustomerId(orderName: string): string {
+  const digits = orderName.replace(/\D/g, "");
+  return `#${digits.padStart(4, "0")}`;
+}
+
 function parseTime(value: string | undefined): { hour: number; minute: number } | null {
   if (!value) return null;
   const match = value.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
@@ -99,7 +104,7 @@ export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
 
   return {
     order_id: order.name,
-    customer_id: order.customer?.email || order.customer?.id || "Shopify customer",
+    customer_id: orderCustomerId(order.name),
     details,
     status: mapStatus(order.displayFulfillmentStatus),
     delivery_date_time: parseDeliveryDate(custom.get("date"), custom.get("pickuptime"), order.createdAt),

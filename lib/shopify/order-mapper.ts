@@ -27,7 +27,9 @@ function orderCustomerId(orderName: string): string {
 
 function parseTime(value: string | undefined): { hour: number; minute: number } | null {
   if (!value) return null;
-  const match = value.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+  // Pickup windows such as “10am - 11am” are represented by their start time.
+  const startTime = value.trim().split(/\s*(?:-|–|—|\bto\b)\s*/i)[0];
+  const match = startTime.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
   if (!match) return null;
   let hour = Number(match[1]);
   const minute = Number(match[2] || 0);

@@ -1,5 +1,6 @@
 import type { OrderFormData } from "@/types/order";
 import type { ShopifyOrder } from "./admin-api";
+import { SHOPIFY_ORDER_MARKER } from "./markers";
 
 function attributes(order: ShopifyOrder): Map<string, string> {
   return new Map(order.customAttributes.map(({ key, value }) => [key.trim().toLowerCase(), value.trim()]));
@@ -57,7 +58,7 @@ export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
     return `${item.title}${variant}${item.quantity > 1 ? ` × ${item.quantity}` : ""}`;
   });
   const messageCard = custom.get("messagecard");
-  const details = [...productLines, messageCard ? `Message card: ${messageCard}` : ""]
+  const details = [SHOPIFY_ORDER_MARKER, ...productLines, messageCard ? `Message card: ${messageCard}` : ""]
     .filter(Boolean)
     .join("\n");
   const delivery = custom.get("delivery") || order.shippingLines.nodes[0]?.title || "delivery";

@@ -7,6 +7,7 @@ import { AppMoreMenu } from "@/components/AppMoreMenu";
 import { Input } from "@/components/ui/input";
 import { getOrders } from "@/lib/supabase/orders";
 import { Order, OrderStatus, PickupDelivery } from "@/types/order";
+import { isShopifyOrder } from "@/lib/shopify/markers";
 import {
   Plus,
   Search,
@@ -16,10 +17,12 @@ import {
   ClipboardList,
   Clock3,
   CheckCheck,
+  ShoppingBag,
 } from "lucide-react";
 
 type PickupDeliveryFilter = PickupDelivery | "All";
 type DeliveryDateKey = string; // YYYY-MM-DD in local time
+type OrderSourceFilter = "manual" | "shopify";
 
 const ORDER_STATUSES: OrderStatus[] = ["Ordered", "Ready", "Done"];
 const STATUS_STORAGE_KEY = "orders-status-filter";
@@ -97,6 +100,7 @@ export default function OrdersPage() {
   const [pickupDeliveryFilter, setPickupDeliveryFilter] =
     useState<PickupDeliveryFilter>("All");
   const [dateFilter, setDateFilter] = useState<DeliveryDateKey[]>([]);
+  const [orderSourceFilter, setOrderSourceFilter] = useState<OrderSourceFilter>("manual");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -134,7 +138,9 @@ export default function OrdersPage() {
   }, [dateFilter]);
 
   useEffect(() => {
-    let filtered = orders;
+    let filtered = orders.filter((order) =>
+      orderSourceFilter === "shopify" ? isShopifyOrder(order) : !isShopifyOrder(order),
+    );
     if (statusFilter.length > 0) {
       filtered = filtered.filter((order) =>
         statusFilter.includes(order.status),
@@ -152,7 +158,7 @@ export default function OrdersPage() {
       );
     }
     setFilteredOrders(filtered);
-  }, [orders, statusFilter, pickupDeliveryFilter, dateFilter]);
+  }, [orders, orderSourceFilter, statusFilter, pickupDeliveryFilter, dateFilter]);
 
   const loadOrders = async () => {
     try {
@@ -168,6 +174,7 @@ export default function OrdersPage() {
   };
 
   const selectSingleStatus = (status: OrderStatus) => {
+    setOrderSourceFilter("manual");
     // Single-select: if already selected, clear; otherwise, select only this one
     setStatusFilter((prev) =>
       prev.includes(status) && prev.length === 1 ? [] : [status],
@@ -175,6 +182,11 @@ export default function OrdersPage() {
   };
 
   const clearStatusFilter = () => setStatusFilter([]);
+
+  const selectShopifyOrders = () => {
+    setOrderSourceFilter("shopify");
+    setStatusFilter([]);
+  };
 
   // Get today's and tomorrow's date keys
   const today = new Date();
@@ -286,6 +298,16 @@ export default function OrdersPage() {
               </button>
             );
           })}
+          <button
+            onClick={selectShopifyOrders}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              orderSourceFilter === "shopify"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            Shopify sync orders
+          </button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium text-gray-500 w-[84px] shrink-0 text-right">
@@ -381,6 +403,7 @@ export default function OrdersPage() {
           <div className="flex gap-8">
             {FOOTER_STATUS_TABS.map(({ label, status, Icon }) => {
               const isActive =
+                orderSourceFilter === "manual" &&
                 statusFilter.includes(status) && statusFilter.length === 1;
               return (
                 <button
@@ -398,6 +421,18 @@ export default function OrdersPage() {
                 </button>
               );
             })}
+            <button
+              onClick={selectShopifyOrders}
+              className={`flex flex-col items-center gap-1 ${
+                orderSourceFilter === "shopify" ? "text-blue-600" : "text-gray-500"
+              }`}
+            >
+              <div className="h-5 w-5 flex items-center justify-center shrink-0">
+                <ShoppingBag className="h-4 w-4" />
+              </div>
+              <span className="text-xs font-medium">Shopify</span>
+              {orderSourceFilter === "shopify" ? <div className="h-0.5 w-8 bg-blue-600" /> : null}
+            </button>
           </div>
         </div>
       </footer>

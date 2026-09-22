@@ -149,7 +149,7 @@ If you haven't set up Supabase yet, you can:
 
 ### Shopify sync
 
-The server-side sync endpoint is `POST /api/shopify/sync`. It reads Shopify order custom attributes named `messageCard`, `delivery`, `date`, and `pickUpTime`, maps them into the existing `orders` columns, and puts the product plus message card into `details`. Sync is insert-only: if an `order_id` already exists in the app, it is skipped and never overwritten. When using client credentials, Shopify issues a short-lived token and the server refreshes it automatically. The webhook endpoint is `POST /api/shopify/webhooks/orders`; new Shopify order events are imported, while events for existing orders are ignored. No database columns are required.
+The server-side sync endpoint is `POST /api/shopify/sync`. It reads Shopify order custom attributes named `messageCard`, `delivery`, `date`, and `pickUpTime`, maps them into the existing `orders` columns, and puts the product plus message card into `details`. Shopify imports are currently paused while the separate Shopify list is prepared. Imported rows are marked with `[Shopify sync order]` in the existing `details` column; the Orders page keeps them out of the manual Ordered/Ready/Done lists and exposes them through the Shopify filter. No database columns are required.
 
 After setting the Shopify token and `SHOPIFY_SYNC_SECRET` in Vercel, register the subscriptions once:
 

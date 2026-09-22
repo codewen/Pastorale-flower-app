@@ -137,6 +137,28 @@ If you haven't set up Supabase yet, you can:
 - `NEXT_PUBLIC_APPSHEET_IMAGE_TABLE_NAME`: (Optional) AppSheet table name for image URLs; default is `Orders`.
 - `NEXT_PUBLIC_APPSHEET_IMAGE_APP_VERSION`: (Optional) AppSheet app version (e.g. `1.000159`). Get the value from a working image URL in the browser.
 - `NEXT_PUBLIC_APPSHEET_IMAGE_SIGNATURE`: (Optional) AppSheet image URL signature. Required by many apps; without it you may get 400 Bad Request. Copy the `signature=` value from a working getimageurl URL (e.g. from right‑click → Copy image address in AppSheet). Note: some apps use a per-image signature that may expire; if import still fails, your CSV may need full image URLs including signature per row.
+- `SHOPIFY_STORE_DOMAIN`: Shopify `*.myshopify.com` domain, for example `pastoraleflower.myshopify.com`.
+- `SHOPIFY_ADMIN_ACCESS_TOKEN`: Optional server-only Shopify Admin API token. If omitted, the app uses Shopify's client-credentials flow below.
+- `SHOPIFY_CLIENT_ID`: Shopify Dev Dashboard app client ID (used when `SHOPIFY_ADMIN_ACCESS_TOKEN` is omitted).
+- `SHOPIFY_CLIENT_SECRET`: Shopify Dev Dashboard app client secret (used when `SHOPIFY_ADMIN_ACCESS_TOKEN` is omitted).
+- `SHOPIFY_API_SECRET`: Server-only Shopify app client secret used to verify webhook HMAC signatures.
+- `SHOPIFY_API_VERSION`: Shopify GraphQL Admin API version; defaults to `2026-07`.
+- `SHOPIFY_SYNC_SECRET`: Optional server-only secret for calling the sync endpoint without an app login.
+- `SHOPIFY_APP_URL`: Public app URL used to build the webhook callback URL (for example `https://pastorale-flower-app.vercel.app`).
+- `SUPABASE_SERVICE_ROLE_KEY`: Recommended server-only Supabase key for Shopify upserts. The anon key is used as a fallback for existing permissive local setups.
+
+### Shopify sync
+
+The server-side sync endpoint is `POST /api/shopify/sync`. It reads Shopify order custom attributes named `messageCard`, `delivery`, `date`, and `pickUpTime`, maps them into the existing `orders` columns, and puts the product plus message card into `details`. When using client credentials, Shopify issues a short-lived token and the server refreshes it automatically. The webhook endpoint is `POST /api/shopify/webhooks/orders`; subscribe it to order create/update/payment/fulfillment/cancellation topics in Shopify. No database columns are required.
+
+After setting the Shopify token and `SHOPIFY_SYNC_SECRET` in Vercel, register the subscriptions once:
+
+```bash
+curl -X POST https://pastorale-flower-app.vercel.app/api/shopify/webhooks/register \
+  -H "x-shopify-sync-secret: $SHOPIFY_SYNC_SECRET"
+```
+
+The registration endpoint is idempotent and skips subscriptions that already point at the same callback URL.
 ## Deployment
 
 This project is configured for deployment to Vercel with CI/CD via GitHub Actions.

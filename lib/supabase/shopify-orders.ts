@@ -13,7 +13,7 @@ export async function getShopifyReviewCount(): Promise<number> {
 export async function getShopifyStagedOrders(): Promise<ShopifyStagedOrder[]> {
   const { data, error } = await supabase
     .from("shopify_orders")
-    .select("id, shopify_order_id, order_id, customer_id, details, status, delivery_date_time, pickup_delivery, payment_status, price, review_status, created_at, updated_at")
+    .select("id, shopify_order_id, order_id, customer_id, details, status, delivery_date_time, pickup_delivery, payment_status, price, review_status, raw_order, created_at, updated_at")
     .in("review_status", ["New", "In review"])
     .order("delivery_date_time", { ascending: true });
   if (error) throw new Error(`Failed to load Shopify review orders: ${error.message}`);
@@ -36,6 +36,10 @@ export async function updateShopifyStagedOrder(
 }
 
 export async function approveShopifyStagedOrder(order: ShopifyStagedOrder) {
+  const rawLineItems = order.raw_order && typeof order.raw_order === "object"
+    ? (order.raw_order as { lineItems?: { nodes?: Array<{ image?: { url?: string } | null }> } }).lineItems?.nodes || []
+    : [];
+  const productPhotos = Array.from(new Set(rawLineItems.map((item) => item.image?.url).filter((url): url is string => Boolean(url))));
   const { data: inserted, error: orderError } = await supabase
     .from("orders")
     .insert({
@@ -47,7 +51,7 @@ export async function approveShopifyStagedOrder(order: ShopifyStagedOrder) {
       pickup_delivery: order.pickup_delivery,
       payment_status: order.payment_status,
       price: order.price,
-      photos: [],
+      photos: productPhotos,
     })
     .select()
     .single();

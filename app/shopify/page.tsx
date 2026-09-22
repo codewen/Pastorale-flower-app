@@ -94,6 +94,13 @@ export default function ShopifyReviewPage() {
               </div>
               <div className="mt-3 grid gap-2 text-sm text-gray-600 sm:grid-cols-3"><span>{order.pickup_delivery}</span><span>{new Date(order.delivery_date_time).toLocaleString()}</span><span>{order.price == null ? "Price pending" : `$${Number(order.price).toFixed(2)}`}</span></div>
               <p className="mt-3 whitespace-pre-wrap text-sm text-gray-800">{order.details || "No product details"}</p>
+              {(() => {
+                const items = order.raw_order && typeof order.raw_order === "object"
+                  ? (order.raw_order as { lineItems?: { nodes?: Array<{ image?: { url?: string } | null }> } }).lineItems?.nodes || []
+                  : [];
+                const images = Array.from(new Set(items.map((item) => item.image?.url).filter((url): url is string => Boolean(url))));
+                return images.length > 0 ? <div className="mt-3 flex gap-2 overflow-x-auto">{images.map((url) => <img key={url} src={url} alt="Shopify product" className="h-20 w-20 rounded-md border object-cover" />)}</div> : null;
+              })()}
             </button>
             {isOpen && <div className="space-y-4 border-t border-gray-100 p-4">
               <div className="grid gap-4 sm:grid-cols-2">

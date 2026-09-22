@@ -30,6 +30,7 @@ export interface ShopifyOrder {
     nodes: Array<{
       title: string;
       quantity: number;
+      image: { url: string } | null;
       variant: { title: string | null } | null;
     }>;
   };
@@ -56,7 +57,7 @@ const ORDER_FIELDS = `
   note
   customAttributes { key value }
   lineItems(first: 100) {
-    nodes { title quantity variant { title } }
+    nodes { title quantity image { url } variant { title } }
   }
   shippingLines(first: 10) { nodes { title } }
 `;

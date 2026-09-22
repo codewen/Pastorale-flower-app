@@ -87,7 +87,15 @@ export default function ShopifyReviewPage() {
         {orders.map((order) => {
           const isOpen = expanded === order.id;
           return <article key={order.id} className="rounded-xl border border-gray-200 bg-white shadow-sm">
-            <button className="w-full p-4 text-left" onClick={() => setExpanded(isOpen ? null : order.id)}>
+            <div
+              className="w-full cursor-pointer p-4 text-left"
+              role="button"
+              tabIndex={0}
+              onClick={() => setExpanded(isOpen ? null : order.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") setExpanded(isOpen ? null : order.id);
+              }}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div><div className="font-semibold">{order.order_id}</div><div className="mt-1 text-sm text-gray-600">{order.customer_id}</div></div>
                 <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-700">{order.review_status}</span>
@@ -101,7 +109,13 @@ export default function ShopifyReviewPage() {
                 const images = Array.from(new Set(items.map((item) => item.image?.url || item.variant?.image?.url || item.variant?.product?.featuredImage?.url).filter((url): url is string => Boolean(url))));
                 return images.length > 0 ? <div className="mt-3 flex gap-2 overflow-x-auto">{images.map((url) => <img key={url} src={url} alt="Shopify product" className="h-20 w-20 rounded-md border object-cover" />)}</div> : null;
               })()}
-            </button>
+              <p className="mt-3 text-xs text-gray-500">Click to expand and edit this order.</p>
+            </div>
+            <div className="flex flex-wrap justify-end gap-2 border-t border-gray-100 px-4 py-3">
+              <button onClick={() => reject(order)} className="rounded-md border border-red-200 px-3 py-2 text-sm text-red-700">Reject</button>
+              <button onClick={() => saveDraft(order)} className="rounded-md border px-3 py-2 text-sm">Save draft</button>
+              <button onClick={() => approve(order)} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white">Approve & add to orders</button>
+            </div>
             {isOpen && <div className="space-y-4 border-t border-gray-100 p-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="text-sm font-medium">Customer<input className="mt-1 w-full rounded-md border p-2 font-normal" value={order.customer_id} onChange={(e) => patchOrder(order.id, { customer_id: e.target.value })} /></label>
@@ -110,7 +124,6 @@ export default function ShopifyReviewPage() {
                 <label className="text-sm font-medium">Price<input type="number" step="0.01" className="mt-1 w-full rounded-md border p-2 font-normal" value={order.price ?? ""} onChange={(e) => patchOrder(order.id, { price: e.target.value === "" ? null : Number(e.target.value) })} /></label>
               </div>
               <label className="block text-sm font-medium">Order details<textarea className="mt-1 min-h-28 w-full rounded-md border p-2 font-normal" value={order.details || ""} onChange={(e) => patchOrder(order.id, { details: e.target.value })} /></label>
-              <div className="flex flex-wrap justify-end gap-2"><button onClick={() => reject(order)} className="rounded-md border border-red-200 px-3 py-2 text-sm text-red-700">Reject</button><button onClick={() => saveDraft(order)} className="rounded-md border px-3 py-2 text-sm">Save draft</button><button onClick={() => approve(order)} className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white">Approve & add to orders</button></div>
             </div>}
           </article>;
         })}

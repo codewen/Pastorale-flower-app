@@ -2,13 +2,20 @@ import type { OrderFormData } from "@/types/order";
 import type { ShopifyOrder } from "./admin-api";
 
 function attributes(order: ShopifyOrder): Map<string, string> {
-  return new Map(order.customAttributes.map(({ key, value }) => [key.trim().toLowerCase(), value.trim()]));
+  return new Map(order.customAttributes.map(({ key, value }) => [key.trim().toLowerCase().replace(/[^a-z0-9]/g, ""), value.trim()]));
 }
 
 function attribute(attributesMap: Map<string, string>, ...keys: string[]): string | undefined {
   for (const key of keys) {
-    const value = attributesMap.get(key);
+    const value = attributesMap.get(key.replace(/[^a-z0-9]/gi, "").toLowerCase());
     if (value) return value;
+  }
+  return undefined;
+}
+
+function instructionAttribute(attributesMap: Map<string, string>): string | undefined {
+  for (const [key, value] of attributesMap) {
+    if (value && /(delivery)?(instruction|note)|specialinstruction/.test(key)) return value;
   }
   return undefined;
 }
@@ -71,7 +78,7 @@ export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
     "delivery instructions",
     "delivery_instruction",
     "delivery instruction",
-  ) || order.note?.trim();
+  ) || instructionAttribute(custom) || order.note?.trim();
   const address = order.shippingAddress
     ? [
         order.shippingAddress.address1,
@@ -85,6 +92,7 @@ export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
     messageCard ? `Message Card: ${messageCard}` : "",
     address ? `Address: ${address}` : "",
     deliveryInstructions ? `Delivery Instructions: ${deliveryInstructions}` : "",
+    "Delivery Fee: 35",
   ].filter(Boolean).join("\n");
   const delivery = attribute(custom, "delivery") || order.shippingLines.nodes[0]?.title || "delivery";
   const pickupDelivery = /pickup|pick up|store/i.test(delivery) ? "Pickup" : "Delivery";

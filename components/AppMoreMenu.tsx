@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Menu, CalendarOff, ClipboardList } from "lucide-react";
+import { Menu, CalendarOff, ClipboardList, ShoppingBag } from "lucide-react";
 
 type MenuItem = {
   label: string;
@@ -21,6 +21,11 @@ const ORDERS_ITEM: MenuItem = {
   href: "/orders",
   icon: ClipboardList,
 };
+const SHOPIFY_ITEM: MenuItem = {
+  label: "Shopify Review",
+  href: "/shopify",
+  icon: ShoppingBag,
+};
 
 export function AppMoreMenu() {
   const router = useRouter();
@@ -32,7 +37,7 @@ export function AppMoreMenu() {
     pathname === "/blackout-dates" ||
     pathname.startsWith("/blackout-dates/");
 
-  const items = isBlackout ? [ORDERS_ITEM] : [BLACKOUT_ITEM];
+  const items = isBlackout ? [ORDERS_ITEM, SHOPIFY_ITEM] : pathname.startsWith("/shopify") ? [ORDERS_ITEM, BLACKOUT_ITEM] : [BLACKOUT_ITEM, SHOPIFY_ITEM];
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {

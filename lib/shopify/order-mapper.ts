@@ -74,9 +74,13 @@ function mapPayment(status: string | null): OrderFormData["payment_status"] {
 
 export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
   const custom = attributes(order);
-  const productLines = order.lineItems.nodes.map((item) => {
+  const productLines = order.lineItems.nodes.flatMap((item) => {
     const variant = item.variant?.title && item.variant.title !== "Default Title" ? ` — ${item.variant.title}` : "";
-    return `${item.title}${variant}${item.quantity > 1 ? ` × ${item.quantity}` : ""}`;
+    const productLine = `${item.title}${variant}${item.quantity > 1 ? ` × ${item.quantity}` : ""}`;
+    const optionLines = (item.variant?.selectedOptions || [])
+      .filter((option) => option.name && option.value)
+      .map((option) => `${option.name}: ${option.value}`);
+    return [productLine, ...optionLines];
   });
   const messageCard = attribute(custom, "messagecard", "message card", "card message");
   const deliveryInstructions = attribute(

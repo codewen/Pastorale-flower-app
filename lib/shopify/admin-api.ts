@@ -35,6 +35,7 @@ export interface ShopifyOrder {
         title: string | null;
         image: { url: string } | null;
         product: { featuredImage: { url: string } | null } | null;
+        selectedOptions: Array<{ name: string; value: string }>;
       } | null;
     }>;
   };
@@ -65,7 +66,7 @@ const ORDER_FIELDS = `
       title
       quantity
       image { url }
-      variant { title image { url } product { featuredImage { url } } }
+      variant { title image { url } product { featuredImage { url } } selectedOptions { name value } }
     }
   }
   shippingLines(first: 10) { nodes { title } }

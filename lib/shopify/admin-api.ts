@@ -15,6 +15,7 @@ export interface ShopifyOrder {
   displayFulfillmentStatus: string | null;
   subtotalPriceSet: { shopMoney: { amount: string } };
   currentTotalPriceSet: { shopMoney: { amount: string } };
+  currentShippingPriceSet: { shopMoney: { amount: string } };
   customer: { id: string; email: string | null } | null;
   shippingAddress: {
     address1: string | null;
@@ -57,6 +58,7 @@ const ORDER_FIELDS = `
   displayFulfillmentStatus
   subtotalPriceSet { shopMoney { amount } }
   currentTotalPriceSet { shopMoney { amount } }
+  currentShippingPriceSet { shopMoney { amount } }
   customer { id email }
   shippingAddress { address1 address2 city province zip country }
   note

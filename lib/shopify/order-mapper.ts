@@ -105,7 +105,7 @@ export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
     messageCard ? `Message Card: ${messageCard}` : "",
     pickupDelivery === "Delivery" && address ? `Address: ${address}` : "",
     deliveryInstructions ? `Delivery Instructions: ${deliveryInstructions}` : "",
-    pickupDelivery === "Delivery" ? "Delivery Fee: 35" : "",
+    pickupDelivery === "Delivery" ? `Delivery Fee: ${Number(order.currentShippingPriceSet.shopMoney.amount)}` : "",
   ].filter(Boolean).join("\n");
 
   return {

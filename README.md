@@ -151,6 +151,8 @@ If you haven't set up Supabase yet, you can:
 
 New Shopify orders are received by `POST /api/shopify/webhooks/orders` and placed in the separate `shopify_orders` review table. The Orders page's Shopify Review screen lets the owner edit and approve an order before it is inserted into the existing `orders` table. Only `orders/create` events are accepted; the historical sync endpoint remains disabled. Existing Shopify orders are never backfilled. No columns are added to the existing `orders` table.
 
+The Shopify order webhook emits JSON runtime logs in Vercel for received and ignored events, rejected signatures, Shopify fetches (including the shipping fee), successful review-table staging, and failures. Search production runtime logs for `/api/shopify/webhooks/orders` or `shopify.webhook`; entries include the Vercel request ID and order number without customer or address data.
+
 After setting the Shopify token and `SHOPIFY_SYNC_SECRET` in Vercel, register the subscriptions once:
 
 ```bash

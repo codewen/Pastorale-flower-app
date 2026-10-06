@@ -43,6 +43,7 @@ export async function approveShopifyStagedOrder(order: ShopifyStagedOrder) {
   const { data: inserted, error: orderError } = await supabase
     .from("orders")
     .insert({
+      source: "shopify_import",
       order_id: order.order_id,
       customer_id: order.customer_id,
       details: order.details,

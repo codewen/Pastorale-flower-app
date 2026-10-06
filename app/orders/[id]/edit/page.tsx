@@ -43,6 +43,7 @@ export default function EditOrderPage() {
       await updateOrder(orderId, formData);
 
       if (
+        currentOrder.source === "shopify_import" &&
         currentOrder.pickup_delivery === "Pickup" &&
         currentOrder.status !== "Done" &&
         formData.status === "Done"
@@ -51,7 +52,7 @@ export default function EditOrderPage() {
           const response = await fetch("/api/shopify/ready-for-pickup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ orderName: currentOrder.order_id }),
+            body: JSON.stringify({ appOrderId: currentOrder.id }),
           });
 
           if (!response.ok) {

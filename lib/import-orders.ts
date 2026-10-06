@@ -174,6 +174,7 @@ export async function importOrdersFromCSV(csvData: CSVOrderRow[]): Promise<void>
       const photos = await Promise.all(rawPhotos.map(resolvePhotoUrl));
 
       const { error } = await supabase.from("orders").insert({
+        source: "manual",
         order_id: row.order_id.trim(),
         customer_id: row.customer_id || "",
         details: row.details || null,

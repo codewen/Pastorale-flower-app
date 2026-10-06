@@ -397,6 +397,16 @@ export default function ViewOrderPage() {
           </label>
           <p className="text-base text-gray-900">{order.status}</p>
         </div>
+
+        {/* 9. Source */}
+        <div className="border-b border-gray-100 pb-2">
+          <label className="text-sm font-medium text-gray-500 block mb-0.5">
+            Source
+          </label>
+          <p className="text-base text-gray-900">
+            {order.source === "shopify_import" ? "Shopify import" : "Manual"}
+          </p>
+        </div>
       </div>
 
       {/* Floating Edit Button */}

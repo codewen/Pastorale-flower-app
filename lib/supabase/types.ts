@@ -4,6 +4,7 @@ export type Database = {
       orders: {
         Row: {
           id: string;
+          source: "manual" | "shopify_import";
           order_id: string;
           customer_id: string;
           details: string | null;
@@ -18,6 +19,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
+          source?: "manual" | "shopify_import";
           order_id: string;
           customer_id: string;
           details?: string | null;
@@ -32,6 +34,7 @@ export type Database = {
         };
         Update: {
           id?: string;
+          source?: "manual" | "shopify_import";
           order_id?: string;
           customer_id?: string;
           details?: string | null;

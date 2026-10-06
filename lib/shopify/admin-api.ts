@@ -238,6 +238,65 @@ export async function listShopifyOrders(query = ""): Promise<ShopifyOrder[]> {
   return orders;
 }
 
+export async function markShopifyOrderReadyForPickup(shopifyOrderId: string): Promise<{ marked: number; skipped: number }> {
+  const data = await graphql<{
+    order: {
+      name: string;
+      fulfillmentOrders: {
+        nodes: Array<{
+          id: string;
+          status: string;
+          deliveryMethod: { methodType: string } | null;
+        }>;
+      };
+    } | null;
+  }>(
+    `query PickupFulfillmentOrders($id: ID!) {
+      order(id: $id) {
+        name
+        fulfillmentOrders(first: 20) {
+          nodes { id status deliveryMethod { methodType } }
+        }
+      }
+    }`,
+    { id: shopifyOrderId },
+  );
+
+  if (!data.order) return { marked: 0, skipped: 1 };
+
+  const pickupFulfillmentOrderIds = data.order.fulfillmentOrders.nodes
+    .filter((fulfillmentOrder) =>
+      fulfillmentOrder.deliveryMethod?.methodType === "PICK_UP" &&
+      !["CLOSED", "CANCELLED", "CANCELLATION_REQUESTED"].includes(fulfillmentOrder.status),
+    )
+    .map(({ id }) => id);
+
+  if (!pickupFulfillmentOrderIds.length) return { marked: 0, skipped: 1 };
+
+  const result = await graphql<{
+    fulfillmentOrderLineItemsPreparedForPickup: {
+      userErrors: Array<{ field: string[] | null; message: string }>;
+    };
+  }>(
+    `mutation MarkReadyForPickup($input: FulfillmentOrderLineItemsPreparedForPickupInput!) {
+      fulfillmentOrderLineItemsPreparedForPickup(input: $input) { userErrors { field message } }
+    }`,
+    {
+      input: {
+        lineItemsByFulfillmentOrder: pickupFulfillmentOrderIds.map((fulfillmentOrderId) => ({
+          fulfillmentOrderId,
+        })),
+      },
+    },
+  );
+
+  const { userErrors } = result.fulfillmentOrderLineItemsPreparedForPickup;
+  if (userErrors.length) {
+    throw new Error(userErrors.map((error) => error.message).join("; "));
+  }
+  return { marked: pickupFulfillmentOrderIds.length, skipped: 0 };
+}
+
 export function verifyShopifyWebhook(rawBody: string, signature: string | null): boolean {
   const secret = process.env.SHOPIFY_API_SECRET;
   if (!secret || !signature) return false;

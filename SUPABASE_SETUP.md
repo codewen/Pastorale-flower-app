@@ -15,6 +15,7 @@ Run the following SQL in the Supabase SQL Editor:
 -- Create orders table
 CREATE TABLE orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  source TEXT NOT NULL DEFAULT 'manual' CHECK (source IN ('manual', 'shopify_import')),
   order_id TEXT UNIQUE NOT NULL,
   customer_id TEXT NOT NULL,
   details TEXT,
@@ -42,6 +43,8 @@ CREATE POLICY "Allow all operations" ON orders
   USING (true)
   WITH CHECK (true);
 ```
+
+For an existing project, run [`scripts/order-source-migration.sql`](scripts/order-source-migration.sql) before deploying code that reads the source field. Existing orders will default to `manual`; new Shopify review approvals are saved as `shopify_import`.
 
 ## 3. Create Storage Bucket
 

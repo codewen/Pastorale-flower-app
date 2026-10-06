@@ -61,6 +61,7 @@ export async function createOrder(formData: OrderFormData): Promise<Order> {
   const { data, error } = await supabase
     .from("orders")
     .insert({
+      source: "manual",
       order_id: orderId,
       customer_id: formData.customer_id,
       details: formData.details || null,

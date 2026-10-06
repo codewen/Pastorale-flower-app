@@ -1,9 +1,11 @@
 export type OrderStatus = "Ordered" | "Ready" | "Done";
 export type PickupDelivery = "Pickup" | "Delivery";
 export type PaymentStatus = "Paid" | "Unpaid" | "Pending";
+export type OrderSource = "manual" | "shopify_import";
 
 export interface Order {
   id: string;
+  source: OrderSource;
   order_id: string;
   customer_id: string;
   details: string | null;

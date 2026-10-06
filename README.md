@@ -149,9 +149,11 @@ If you haven't set up Supabase yet, you can:
 
 ### Shopify sync
 
-New Shopify orders are received by `POST /api/shopify/webhooks/orders` and placed in the separate `shopify_orders` review table. The Orders page's Shopify Review screen lets the owner edit and approve an order before it is inserted into the existing `orders` table. Only `orders/create` events are accepted; the historical sync endpoint remains disabled. Existing Shopify orders are never backfilled. No columns are added to the existing `orders` table.
+New Shopify orders are received by `POST /api/shopify/webhooks/orders` and placed in the separate `shopify_orders` review table. The Orders page's Shopify Review screen lets the owner edit and approve an order before it is inserted into the existing `orders` table. Only `orders/create` events are accepted; the historical sync endpoint remains disabled. Existing Shopify orders are never backfilled. The `orders.source` column identifies orders created manually or imported from Shopify.
 
 The Shopify order webhook emits JSON runtime logs in Vercel for received and ignored events, rejected signatures, Shopify fetches (including the shipping fee), successful review-table staging, and failures. Search production runtime logs for `/api/shopify/webhooks/orders` or `shopify.webhook`; entries include the Vercel request ID and order number without customer or address data.
+
+Run [`scripts/order-source-migration.sql`](scripts/order-source-migration.sql) in Supabase before deploying. Existing rows default to `manual`; going forward, normal app/CSV orders are saved with source `manual`, and Shopify review approvals use `shopify_import`. The order details page shows the source. When a `shopify_import` Pickup order changes from a status other than `Done` to `Done`, the app verifies the database source and an `Imported` Shopify review record, then marks the matching Shopify fulfillment order as ready for pickup. Shopify sends its Ready for Pickup notification. A matching order name by itself cannot trigger the action. This requires the Shopify app to have the `write_merchant_managed_fulfillment_orders` access scope and the acting Shopify user to have permission to fulfill and ship orders. Manual orders and Delivery orders are skipped. Failures are logged under `shopify.ready_for_pickup`; the app order is still saved as `Done` and the user sees a warning.
 
 After setting the Shopify token and `SHOPIFY_SYNC_SECRET` in Vercel, register the subscriptions once:
 

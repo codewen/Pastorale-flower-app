@@ -34,11 +34,35 @@ export default function EditOrderPage() {
   const handleSubmit = async (formData: OrderFormData) => {
     try {
       setIsSaving(true);
+      const currentOrder = order;
+      if (!currentOrder) throw new Error("Order is no longer available. Please reload and try again.");
       // Convert datetime-local to ISO string
       const dateTime = new Date(formData.delivery_date_time);
       formData.delivery_date_time = dateTime.toISOString();
 
       await updateOrder(orderId, formData);
+
+      if (
+        currentOrder.pickup_delivery === "Pickup" &&
+        currentOrder.status !== "Done" &&
+        formData.status === "Done"
+      ) {
+        try {
+          const response = await fetch("/api/shopify/ready-for-pickup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderName: currentOrder.order_id }),
+          });
+
+          if (!response.ok) {
+            const result = (await response.json().catch(() => ({}))) as { error?: string };
+            alert(result.error || "订单已在 App 标记为 Done，但 Shopify 未能标记为 Ready for pickup。请检查 Shopify 权限和服务端日志。");
+          }
+        } catch {
+          alert("订单已在 App 标记为 Done，但未能连接 Shopify。请检查服务端日志。");
+        }
+      }
+
       router.push(`/orders/${orderId}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to update order. Please try again.";

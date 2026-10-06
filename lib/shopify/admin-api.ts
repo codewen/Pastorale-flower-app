@@ -238,38 +238,33 @@ export async function listShopifyOrders(query = ""): Promise<ShopifyOrder[]> {
   return orders;
 }
 
-export async function markShopifyOrderReadyForPickup(orderName: string): Promise<{ marked: number; skipped: number }> {
+export async function markShopifyOrderReadyForPickup(shopifyOrderId: string): Promise<{ marked: number; skipped: number }> {
   const data = await graphql<{
-    orders: {
-      nodes: Array<{
-        name: string;
-        fulfillmentOrders: {
-          nodes: Array<{
-            id: string;
-            status: string;
-            deliveryMethod: { methodType: string } | null;
-          }>;
-        };
-      }>;
-    };
+    order: {
+      name: string;
+      fulfillmentOrders: {
+        nodes: Array<{
+          id: string;
+          status: string;
+          deliveryMethod: { methodType: string } | null;
+        }>;
+      };
+    } | null;
   }>(
-    `query PickupFulfillmentOrders($query: String!) {
-      orders(first: 2, query: $query) {
-        nodes {
-          name
-          fulfillmentOrders(first: 20) {
-            nodes { id status deliveryMethod { methodType } }
-          }
+    `query PickupFulfillmentOrders($id: ID!) {
+      order(id: $id) {
+        name
+        fulfillmentOrders(first: 20) {
+          nodes { id status deliveryMethod { methodType } }
         }
       }
     }`,
-    { query: `name:${orderName}` },
+    { id: shopifyOrderId },
   );
 
-  const order = data.orders.nodes.find((candidate) => candidate.name === orderName);
-  if (!order) return { marked: 0, skipped: 1 };
+  if (!data.order) return { marked: 0, skipped: 1 };
 
-  const pickupFulfillmentOrderIds = order.fulfillmentOrders.nodes
+  const pickupFulfillmentOrderIds = data.order.fulfillmentOrders.nodes
     .filter((fulfillmentOrder) =>
       fulfillmentOrder.deliveryMethod?.methodType === "PICK_UP" &&
       !["CLOSED", "CANCELLED", "CANCELLATION_REQUESTED"].includes(fulfillmentOrder.status),

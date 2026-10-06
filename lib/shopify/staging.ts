@@ -34,3 +34,14 @@ export async function stageShopifyOrder(order: ShopifyOrder) {
   if (error) throw new Error(`Failed to stage ${order.name}: ${error.message}`);
   return data;
 }
+
+export async function getImportedShopifyOrderId(orderName: string): Promise<string | null> {
+  const { data, error } = await getSupabase()
+    .from("shopify_orders")
+    .select("shopify_order_id")
+    .eq("order_id", orderName)
+    .eq("review_status", "Imported")
+    .maybeSingle();
+  if (error) throw new Error(`Failed to verify Shopify order source: ${error.message}`);
+  return data?.shopify_order_id || null;
+}

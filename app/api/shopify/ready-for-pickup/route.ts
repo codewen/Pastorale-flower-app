@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { markShopifyOrderReadyForPickup } from "@/lib/shopify/admin-api";
+import { getImportedShopifyOrderId } from "@/lib/shopify/staging";
 
 export const runtime = "nodejs";
 
@@ -20,14 +21,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "A valid order name is required" }, { status: 400 });
   }
 
-  // Shopify order names imported by the app use the #1234 format. Ignore
-  // manually-created app orders rather than searching Shopify for them.
-  if (!/^#\d+$/.test(orderName)) {
-    return NextResponse.json({ marked: 0, skipped: true, reason: "not_shopify_order" });
-  }
-
   try {
-    const result = await markShopifyOrderReadyForPickup(orderName);
+    const shopifyOrderId = await getImportedShopifyOrderId(orderName);
+    if (!shopifyOrderId) {
+      // The display name alone is not proof that the app order came from Shopify.
+      // eslint-disable-next-line no-console
+      console.info("[shopify.ready_for_pickup] skipped", { orderName, reason: "not_imported_from_shopify" });
+      return NextResponse.json({ marked: 0, skipped: true, reason: "not_imported_from_shopify" });
+    }
+
+    const result = await markShopifyOrderReadyForPickup(shopifyOrderId);
     // eslint-disable-next-line no-console
     console.info("[shopify.ready_for_pickup]", { orderName, ...result });
     return NextResponse.json(result);

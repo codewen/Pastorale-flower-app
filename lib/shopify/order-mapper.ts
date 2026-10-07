@@ -80,7 +80,12 @@ export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
     const optionLines = (item.variant?.selectedOptions || [])
       .filter((option) => option.name && option.value)
       .map((option) => `${option.name}: ${option.value}`);
-    return [productLine, ...optionLines];
+    const optionKeys = new Set(optionLines.map((line) => line.toLowerCase()));
+    const customAttributeLines = (item.customAttributes || [])
+      .filter((attribute) => attribute.key.trim() && attribute.value.trim())
+      .map((attribute) => `${attribute.key.trim()}: ${attribute.value.trim()}`)
+      .filter((line) => !optionKeys.has(line.toLowerCase()));
+    return [productLine, ...optionLines, ...customAttributeLines];
   });
   const messageCard = attribute(custom, "messagecard", "message card", "card message");
   const deliveryInstructions = attribute(

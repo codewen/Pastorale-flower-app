@@ -32,6 +32,7 @@ export interface ShopifyOrder {
       title: string;
       quantity: number;
       image: { url: string } | null;
+      customAttributes?: ShopifyCustomAttribute[];
       variant: {
         title: string | null;
         image: { url: string } | null;
@@ -68,6 +69,7 @@ const ORDER_FIELDS = `
       title
       quantity
       image { url }
+      customAttributes { key value }
       variant { title image { url } product { featuredImage { url } } selectedOptions { name value } }
     }
   }

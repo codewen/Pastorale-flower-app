@@ -10,6 +10,7 @@ import { formatDate, formatCurrency } from "@/lib/utils";
 import { Edit, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { FullscreenZoomableImage } from "@/components/FullscreenZoomableImage";
+import { FormattedOrderDetails } from "@/components/FormattedOrderDetails";
 
 const STATUS_STORAGE_KEY = "orders-status-filter";
 const PICKUP_DELIVERY_STORAGE_KEY = "orders-pickup-delivery-filter";
@@ -298,9 +299,7 @@ export default function ViewOrderPage() {
             <label className="text-sm font-medium text-gray-500 block mb-0.5">
               Details
             </label>
-            <p className="text-base text-gray-900 whitespace-pre-wrap">
-              {order.details}
-            </p>
+            <FormattedOrderDetails details={order.details} className="text-base text-gray-900" />
           </div>
         )}
 

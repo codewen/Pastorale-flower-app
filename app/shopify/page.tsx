@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AppMoreMenu } from "@/components/AppMoreMenu";
 import { getShopifyStagedOrders, updateShopifyStagedOrder, approveShopifyStagedOrder, rejectShopifyStagedOrder } from "@/lib/supabase/shopify-orders";
 import type { ShopifyStagedOrder } from "@/types/shopify";
+import { FormattedOrderDetails } from "@/components/FormattedOrderDetails";
 
 function localDateTime(value: string) {
   const date = new Date(value);
@@ -101,7 +102,9 @@ export default function ShopifyReviewPage() {
                 <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-700">{order.review_status}</span>
               </div>
               <div className="mt-3 grid gap-2 text-sm text-gray-600 sm:grid-cols-3"><span>{order.pickup_delivery}</span><span>{new Date(order.delivery_date_time).toLocaleString()}</span><span>{order.price == null ? "Price pending" : `$${Number(order.price).toFixed(2)}`}</span></div>
-              <p className="mt-3 whitespace-pre-wrap text-sm text-gray-800">{order.details || "No product details"}</p>
+              {order.details
+                ? <FormattedOrderDetails details={order.details} className="mt-3 text-sm text-gray-800" />
+                : <p className="mt-3 text-sm text-gray-800">No product details</p>}
               {(() => {
                 const items = order.raw_order && typeof order.raw_order === "object"
                   ? (order.raw_order as { lineItems?: { nodes?: Array<{ image?: { url?: string } | null; variant?: { image?: { url?: string } | null; product?: { featuredImage?: { url?: string } | null } | null } | null }> } }).lineItems?.nodes || []

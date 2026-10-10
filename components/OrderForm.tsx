@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
+import { FormattedOrderDetails } from "./FormattedOrderDetails";
 import { Label } from "./ui/label";
 import { PhotoUpload } from "./PhotoUpload";
 import { OrderFormData, PickupDelivery, PaymentStatus, OrderStatus } from "@/types/order";
@@ -167,6 +168,12 @@ export function OrderForm({
           }
           rows={4}
         />
+        {formData.details.trim() && (
+          <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">Preview</p>
+            <FormattedOrderDetails details={formData.details} className="text-sm text-gray-800" />
+          </div>
+        )}
       </div>
 
       {/* Photos */}

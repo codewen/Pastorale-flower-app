@@ -115,6 +115,8 @@ export default function SetupPage() {
     CHECK (pickup_delivery IN ('Pickup', 'Delivery')),
   payment_status TEXT NOT NULL DEFAULT 'Pending' 
     CHECK (payment_status IN ('Paid', 'Unpaid', 'Pending')),
+  is_bundled BOOLEAN NOT NULL DEFAULT FALSE,
+  is_made BOOLEAN NOT NULL DEFAULT FALSE,
   price NUMERIC,
   photos TEXT[] DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW(),

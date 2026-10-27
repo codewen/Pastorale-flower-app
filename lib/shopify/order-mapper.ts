@@ -99,6 +99,8 @@ export function mapShopifyOrder(order: ShopifyOrder): MappedShopifyOrder {
     delivery_date_time: deliveryDateTime,
     pickup_delivery: pickupDelivery,
     payment_status: mapPayment(order.displayFinancialStatus),
+    is_bundled: false,
+    is_made: false,
     // Use the merchandise subtotal only. Shopify's current total includes
     // shipping (and may include taxes), which should not be copied into the
     // app's order price.

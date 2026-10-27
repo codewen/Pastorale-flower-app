@@ -108,6 +108,8 @@ export async function importOrdersFromCSV(csvData: CSVOrderRow[]): Promise<void>
         delivery_date_time: parseCsvDeliveryDate(row.delivery_date_time),
         pickup_delivery: (row.pickup_delivery as "Pickup" | "Delivery") || "Pickup",
         payment_status: (row.payment_status as "Paid" | "Unpaid" | "Pending") || "Paid",
+        is_bundled: false,
+        is_made: false,
         price: parsePrice(row.price),
         photos: photos,
       });

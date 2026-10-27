@@ -110,6 +110,8 @@ export async function importOrdersFromCSV(csvData: CSVOrderRow[]): Promise<void>
         payment_status: (row.payment_status as "Paid" | "Unpaid" | "Pending") || "Paid",
         is_bundled: false,
         is_made: false,
+        is_missing_flowers: false,
+        is_prepared: false,
         price: parsePrice(row.price),
         photos: photos,
       });

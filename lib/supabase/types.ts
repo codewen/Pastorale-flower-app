@@ -14,6 +14,8 @@ export type Database = {
           payment_status: "Paid" | "Unpaid" | "Pending";
           is_bundled: boolean;
           is_made: boolean;
+          is_missing_flowers: boolean;
+          is_prepared: boolean;
           price: number | null;
           photos: string[];
           created_at: string;
@@ -31,6 +33,8 @@ export type Database = {
           payment_status?: "Paid" | "Unpaid" | "Pending";
           is_bundled?: boolean;
           is_made?: boolean;
+          is_missing_flowers?: boolean;
+          is_prepared?: boolean;
           price?: number | null;
           photos?: string[];
           created_at?: string;
@@ -48,6 +52,8 @@ export type Database = {
           payment_status?: "Paid" | "Unpaid" | "Pending";
           is_bundled?: boolean;
           is_made?: boolean;
+          is_missing_flowers?: boolean;
+          is_prepared?: boolean;
           price?: number | null;
           photos?: string[];
           created_at?: string;

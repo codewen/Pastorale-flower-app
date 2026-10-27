@@ -198,7 +198,13 @@ export function OrderTable({
                   {formatDate(order.delivery_date_time)}
                 </td>
                 <td className="py-1.5 px-2 md:px-3 text-sm leading-tight">{order.pickup_delivery}</td>
-                <td className="py-1.5 px-2 md:px-3 text-sm leading-tight">{order.customer_id}</td>
+                <td className="py-1.5 px-2 md:px-3 text-sm leading-tight">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span>{order.customer_id}</span>
+                    {order.is_bundled && <span className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800">已扎</span>}
+                    {order.is_made && <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">已做</span>}
+                  </div>
+                </td>
                 <td className="py-1.5 px-2 md:px-3 text-sm leading-tight">
                   {formatCurrency(order.price)}
                 </td>

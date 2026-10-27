@@ -69,6 +69,8 @@ export async function createOrder(formData: OrderFormData): Promise<Order> {
       delivery_date_time: formData.delivery_date_time,
       pickup_delivery: formData.pickup_delivery,
       payment_status: formData.payment_status || "Pending",
+      is_bundled: formData.is_bundled,
+      is_made: formData.is_made,
       price,
       photos: photoUrls,
     })
@@ -93,6 +95,8 @@ export async function updateOrder(
     delivery_date_time: string;
     pickup_delivery: string;
     payment_status: string;
+    is_bundled: boolean;
+    is_made: boolean;
     price: number | null;
     updated_at: string;
     photos?: string[];
@@ -104,6 +108,8 @@ export async function updateOrder(
     delivery_date_time: formData.delivery_date_time,
     pickup_delivery: formData.pickup_delivery,
     payment_status: formData.payment_status,
+    is_bundled: formData.is_bundled,
+    is_made: formData.is_made,
     price: formData.price,
     updated_at: new Date().toISOString(),
   };

@@ -101,6 +101,8 @@ export default function EditOrderPage() {
     delivery_date_time: order.delivery_date_time,
     pickup_delivery: order.pickup_delivery,
     payment_status: order.payment_status,
+    is_bundled: order.is_bundled,
+    is_made: order.is_made,
     price: order.price,
   };
 

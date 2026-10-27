@@ -13,6 +13,8 @@ export interface Order {
   delivery_date_time: string;
   pickup_delivery: PickupDelivery;
   payment_status: PaymentStatus;
+  is_bundled: boolean;
+  is_made: boolean;
   price: number | null;
   photos: string[];
   created_at: string;
@@ -27,6 +29,8 @@ export interface OrderFormData {
   delivery_date_time: string;
   pickup_delivery: PickupDelivery;
   payment_status: PaymentStatus;
+  is_bundled: boolean;
+  is_made: boolean;
   price: number | null;
   photos?: File[];
   /** When editing: existing photo URLs to keep (omitted = keep all). */

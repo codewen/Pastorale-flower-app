@@ -55,6 +55,8 @@ export async function approveShopifyStagedOrder(order: ShopifyStagedOrder) {
       delivery_date_time: order.delivery_date_time,
       pickup_delivery: order.pickup_delivery,
       payment_status: order.payment_status,
+      is_bundled: false,
+      is_made: false,
       price: order.price,
       photos: productPhotos,
     })

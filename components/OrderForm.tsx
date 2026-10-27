@@ -51,6 +51,8 @@ export function OrderForm({
     delivery_date_time: initialData?.delivery_date_time || getDefaultDateTimeLocal(),
     pickup_delivery: initialData?.pickup_delivery || "Pickup",
     payment_status: initialData?.payment_status || "Paid",
+    is_bundled: initialData?.is_bundled ?? false,
+    is_made: initialData?.is_made ?? false,
     price: initialData?.price ?? null,
     photos: [],
   });
@@ -244,6 +246,33 @@ export function OrderForm({
           </Button>
         </div>
       </div>
+
+      {/* Production status */}
+      <fieldset>
+        <legend className="mb-2 block text-sm font-medium">Production</legend>
+        <div className="flex flex-wrap gap-5">
+          <label className="flex items-center gap-2 text-sm text-gray-800" htmlFor="is-bundled">
+            <Input
+              id="is-bundled"
+              type="checkbox"
+              checked={formData.is_bundled}
+              onChange={(e) => setFormData((prev) => ({ ...prev, is_bundled: e.target.checked }))}
+              className="h-4 w-4"
+            />
+            已扎
+          </label>
+          <label className="flex items-center gap-2 text-sm text-gray-800" htmlFor="is-made">
+            <Input
+              id="is-made"
+              type="checkbox"
+              checked={formData.is_made}
+              onChange={(e) => setFormData((prev) => ({ ...prev, is_made: e.target.checked }))}
+              className="h-4 w-4"
+            />
+            已做
+          </label>
+        </div>
+      </fieldset>
 
       {/* Status */}
       <div>

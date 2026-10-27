@@ -12,6 +12,8 @@ export type Database = {
           delivery_date_time: string;
           pickup_delivery: "Pickup" | "Delivery";
           payment_status: "Paid" | "Unpaid" | "Pending";
+          is_bundled: boolean;
+          is_made: boolean;
           price: number | null;
           photos: string[];
           created_at: string;
@@ -27,6 +29,8 @@ export type Database = {
           delivery_date_time: string;
           pickup_delivery: "Pickup" | "Delivery";
           payment_status?: "Paid" | "Unpaid" | "Pending";
+          is_bundled?: boolean;
+          is_made?: boolean;
           price?: number | null;
           photos?: string[];
           created_at?: string;
@@ -42,6 +46,8 @@ export type Database = {
           delivery_date_time?: string;
           pickup_delivery?: "Pickup" | "Delivery";
           payment_status?: "Paid" | "Unpaid" | "Pending";
+          is_bundled?: boolean;
+          is_made?: boolean;
           price?: number | null;
           photos?: string[];
           created_at?: string;

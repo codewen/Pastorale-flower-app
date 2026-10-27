@@ -15,6 +15,8 @@ export interface Order {
   payment_status: PaymentStatus;
   is_bundled: boolean;
   is_made: boolean;
+  is_missing_flowers: boolean;
+  is_prepared: boolean;
   price: number | null;
   photos: string[];
   created_at: string;
@@ -31,6 +33,8 @@ export interface OrderFormData {
   payment_status: PaymentStatus;
   is_bundled: boolean;
   is_made: boolean;
+  is_missing_flowers: boolean;
+  is_prepared: boolean;
   price: number | null;
   photos?: File[];
   /** When editing: existing photo URLs to keep (omitted = keep all). */

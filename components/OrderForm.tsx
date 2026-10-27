@@ -53,6 +53,8 @@ export function OrderForm({
     payment_status: initialData?.payment_status || "Paid",
     is_bundled: initialData?.is_bundled ?? false,
     is_made: initialData?.is_made ?? false,
+    is_missing_flowers: initialData?.is_missing_flowers ?? false,
+    is_prepared: initialData?.is_prepared ?? false,
     price: initialData?.price ?? null,
     photos: [],
   });
@@ -270,6 +272,26 @@ export function OrderForm({
               className="h-4 w-4"
             />
             已做
+          </label>
+          <label className="flex items-center gap-2 text-sm text-gray-800" htmlFor="is-missing-flowers">
+            <Input
+              id="is-missing-flowers"
+              type="checkbox"
+              checked={formData.is_missing_flowers}
+              onChange={(e) => setFormData((prev) => ({ ...prev, is_missing_flowers: e.target.checked }))}
+              className="h-4 w-4"
+            />
+            缺花
+          </label>
+          <label className="flex items-center gap-2 text-sm text-gray-800" htmlFor="is-prepared">
+            <Input
+              id="is-prepared"
+              type="checkbox"
+              checked={formData.is_prepared}
+              onChange={(e) => setFormData((prev) => ({ ...prev, is_prepared: e.target.checked }))}
+              className="h-4 w-4"
+            />
+            已备
           </label>
         </div>
       </fieldset>

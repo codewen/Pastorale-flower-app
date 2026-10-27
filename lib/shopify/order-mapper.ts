@@ -101,6 +101,8 @@ export function mapShopifyOrder(order: ShopifyOrder): MappedShopifyOrder {
     payment_status: mapPayment(order.displayFinancialStatus),
     is_bundled: false,
     is_made: false,
+    is_missing_flowers: false,
+    is_prepared: false,
     // Use the merchandise subtotal only. Shopify's current total includes
     // shipping (and may include taxes), which should not be copied into the
     // app's order price.

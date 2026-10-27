@@ -103,6 +103,8 @@ export default function EditOrderPage() {
     payment_status: order.payment_status,
     is_bundled: order.is_bundled,
     is_made: order.is_made,
+    is_missing_flowers: order.is_missing_flowers,
+    is_prepared: order.is_prepared,
     price: order.price,
   };
 

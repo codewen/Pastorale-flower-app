@@ -9,7 +9,7 @@ export interface ShopifyStagedOrder {
   customer_id: string;
   details: string | null;
   status: OrderStatus;
-  delivery_date_time: string;
+  delivery_date_time: string | null;
   pickup_delivery: PickupDelivery;
   payment_status: PaymentStatus;
   price: number | null;

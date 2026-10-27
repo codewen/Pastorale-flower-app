@@ -4,13 +4,8 @@ import { useEffect, useState } from "react";
 import { AppMoreMenu } from "@/components/AppMoreMenu";
 import { getShopifyStagedOrders, updateShopifyStagedOrder, approveShopifyStagedOrder, rejectShopifyStagedOrder } from "@/lib/supabase/shopify-orders";
 import type { ShopifyStagedOrder } from "@/types/shopify";
+import { hasDeliveryDateTime, parseShopifyDeliveryDate, sydneyDateTimeInput } from "@/lib/order-date";
 import { FormattedOrderDetails } from "@/components/FormattedOrderDetails";
-
-function localDateTime(value: string) {
-  const date = new Date(value);
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-}
 
 export default function ShopifyReviewPage() {
   const [orders, setOrders] = useState<ShopifyStagedOrder[]>([]);
@@ -48,13 +43,23 @@ export default function ShopifyReviewPage() {
       });
       patchOrder(order.id, saved);
       setMessage(`${order.order_id} saved for review.`);
-    } catch (error) { setMessage(error instanceof Error ? error.message : "Could not save review order"); }
+      return saved;
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not save review order");
+      return null;
+    }
   };
 
   const approve = async (order: ShopifyStagedOrder) => {
     try {
-      await saveDraft(order);
-      await approveShopifyStagedOrder(order);
+      if (!hasDeliveryDateTime(order.delivery_date_time)) {
+        setExpanded(order.id);
+        setMessage("Confirm a valid delivery / pickup date and time before approving this order.");
+        return;
+      }
+      const saved = await saveDraft(order);
+      if (!saved) return;
+      await approveShopifyStagedOrder(saved);
       setOrders((current) => current.filter((item) => item.id !== order.id));
       setExpanded(null);
       setMessage(`${order.order_id} added to manual orders.`);
@@ -87,6 +92,7 @@ export default function ShopifyReviewPage() {
         {!loading && orders.length === 0 ? <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center text-gray-500">No Shopify orders waiting for review.</div> : null}
         {orders.map((order) => {
           const isOpen = expanded === order.id;
+          const dateTimeConfirmed = hasDeliveryDateTime(order.delivery_date_time);
           return <article key={order.id} className="rounded-xl border border-gray-200 bg-white shadow-sm">
             <div
               className="w-full cursor-pointer p-4 text-left"
@@ -101,7 +107,8 @@ export default function ShopifyReviewPage() {
                 <div><div className="font-semibold">{order.order_id}</div><div className="mt-1 text-sm text-gray-600">{order.customer_id}</div></div>
                 <span className="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-medium text-orange-700">{order.review_status}</span>
               </div>
-              <div className="mt-3 grid gap-2 text-sm text-gray-600 sm:grid-cols-3"><span>{order.pickup_delivery}</span><span>{new Date(order.delivery_date_time).toLocaleString()}</span><span>{order.price == null ? "Price pending" : `$${Number(order.price).toFixed(2)}`}</span></div>
+              <div className="mt-3 grid gap-2 text-sm text-gray-600 sm:grid-cols-3"><span>{order.pickup_delivery}</span><span>{dateTimeConfirmed ? `${new Date(order.delivery_date_time!).toLocaleString("en-AU", { timeZone: "Australia/Sydney" })} (Sydney)` : "Date / time needs confirmation"}</span><span>{order.price == null ? "Price pending" : `$${Number(order.price).toFixed(2)}`}</span></div>
+              {!dateTimeConfirmed && <p className="mt-2 text-sm text-amber-800">Confirm the delivery / pickup date and time before adding this order to daily work.</p>}
               {order.details
                 ? <FormattedOrderDetails details={order.details} className="mt-3 text-sm text-gray-800" />
                 : <p className="mt-3 text-sm text-gray-800">No product details</p>}
@@ -123,7 +130,12 @@ export default function ShopifyReviewPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="text-sm font-medium">Customer<input className="mt-1 w-full rounded-md border p-2 font-normal" value={order.customer_id} onChange={(e) => patchOrder(order.id, { customer_id: e.target.value })} /></label>
                 <label className="text-sm font-medium">Delivery / pickup<select className="mt-1 w-full rounded-md border p-2 font-normal" value={order.pickup_delivery} onChange={(e) => patchOrder(order.id, { pickup_delivery: e.target.value as ShopifyStagedOrder["pickup_delivery"] })}><option>Pickup</option><option>Delivery</option></select></label>
-                <label className="text-sm font-medium">Date and time<input type="datetime-local" className="mt-1 w-full rounded-md border p-2 font-normal" value={localDateTime(order.delivery_date_time)} onChange={(e) => patchOrder(order.id, { delivery_date_time: new Date(e.target.value).toISOString() })} /></label>
+                <label className="text-sm font-medium">Date and time (Sydney)<input type="datetime-local" className="mt-1 w-full rounded-md border p-2 font-normal" value={sydneyDateTimeInput(order.delivery_date_time)} onChange={(e) => {
+                  const [date, time] = e.target.value.split("T");
+                  const timestamp = parseShopifyDeliveryDate(date, time);
+                  patchOrder(order.id, { delivery_date_time: timestamp });
+                  if (e.target.value && !timestamp) setMessage("This Sydney date and time is invalid or ambiguous. Please select another time.");
+                }} /></label>
                 <label className="text-sm font-medium">Price<input type="number" step="0.01" className="mt-1 w-full rounded-md border p-2 font-normal" value={order.price ?? ""} onChange={(e) => patchOrder(order.id, { price: e.target.value === "" ? null : Number(e.target.value) })} /></label>
               </div>
               <label className="block text-sm font-medium">Order details<textarea className="mt-1 min-h-28 w-full rounded-md border p-2 font-normal" value={order.details || ""} onChange={(e) => patchOrder(order.id, { details: e.target.value })} /></label>

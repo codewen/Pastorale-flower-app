@@ -51,7 +51,7 @@ export function OrderForm({
     delivery_date_time: initialData?.delivery_date_time || getDefaultDateTimeLocal(),
     pickup_delivery: initialData?.pickup_delivery || "Pickup",
     payment_status: initialData?.payment_status || "Paid",
-    price: initialData?.price || null,
+    price: initialData?.price ?? null,
     photos: [],
   });
 
@@ -212,7 +212,7 @@ export function OrderForm({
           <Input
             id="price"
             type="text"
-            value={formData.price || ""}
+            value={formData.price ?? ""}
             onChange={(e) => handlePriceChange(e.target.value)}
             placeholder="0.00"
           />
@@ -223,7 +223,7 @@ export function OrderForm({
             onClick={() =>
               setFormData((prev) => ({
                 ...prev,
-                price: (prev.price || 0) - 1,
+                price: (prev.price ?? 0) - 1,
               }))
             }
           >
@@ -236,7 +236,7 @@ export function OrderForm({
             onClick={() =>
               setFormData((prev) => ({
                 ...prev,
-                price: (prev.price || 0) + 1,
+                price: (prev.price ?? 0) + 1,
               }))
             }
           >

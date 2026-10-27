@@ -13,7 +13,7 @@ export interface ShopifyOrder {
   createdAt: string;
   displayFinancialStatus: string | null;
   displayFulfillmentStatus: string | null;
-  subtotalPriceSet: { shopMoney: { amount: string } };
+  subtotalPriceSet: { shopMoney: { amount: string } } | null;
   currentTotalPriceSet: { shopMoney: { amount: string } };
   currentShippingPriceSet: { shopMoney: { amount: string } };
   customer: { id: string; email: string | null } | null;
@@ -32,6 +32,11 @@ export interface ShopifyOrder {
       title: string;
       quantity: number;
       image: { url: string } | null;
+      /**
+       * Product-form values (such as our Flower Colour swatch) are stored on
+       * the line item, rather than the order, by Shopify.
+       */
+      customAttributes: ShopifyCustomAttribute[];
       variant: {
         title: string | null;
         image: { url: string } | null;
@@ -68,6 +73,7 @@ const ORDER_FIELDS = `
       title
       quantity
       image { url }
+      customAttributes { key value }
       variant { title image { url } product { featuredImage { url } } selectedOptions { name value } }
     }
   }

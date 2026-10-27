@@ -1,5 +1,6 @@
 import type { OrderFormData } from "@/types/order";
 import type { ShopifyOrder } from "./admin-api";
+import { parseShopifyDeliveryDate } from "../order-date";
 
 function attributes(order: ShopifyOrder): Map<string, string> {
   return new Map(order.customAttributes.map(({ key, value }) => [key.trim().toLowerCase().replace(/[^a-z0-9]/g, ""), value.trim()]));
@@ -25,41 +26,6 @@ function orderCustomerId(orderName: string): string {
   return `#${digits.padStart(4, "0")}`;
 }
 
-function parseTime(value: string | undefined): { hour: number; minute: number } | null {
-  if (!value) return null;
-  // Pickup windows such as “10am - 11am” are represented by their start time.
-  const startTime = value.trim().split(/\s*(?:-|–|—|\bto\b)\s*/i)[0];
-  const match = startTime.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
-  if (!match) return null;
-  let hour = Number(match[1]);
-  const minute = Number(match[2] || 0);
-  const meridiem = match[3]?.toLowerCase();
-  if (meridiem === "pm" && hour < 12) hour += 12;
-  if (meridiem === "am" && hour === 12) hour = 0;
-  return hour >= 0 && hour <= 23 && minute <= 59 ? { hour, minute } : null;
-}
-
-function sydneyOffsetHours(year: number, month: number, day: number): number {
-  const parts = new Intl.DateTimeFormat("en-AU", {
-    timeZone: "Australia/Sydney",
-    timeZoneName: "shortOffset",
-  }).formatToParts(new Date(Date.UTC(year, month - 1, day, 12)));
-  const offset = parts.find((part) => part.type === "timeZoneName")?.value.match(/GMT([+-]\d+)/);
-  return offset ? Number(offset[1]) : 10;
-}
-
-function parseDeliveryDate(dateValue: string | undefined, timeValue: string | undefined, fallback: string): string {
-  if (!dateValue) return fallback;
-  const match = dateValue.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
-  if (!match) return fallback;
-  const day = Number(match[1]);
-  const month = Number(match[2]);
-  const year = Number(match[3]);
-  const time = parseTime(timeValue) || { hour: 13, minute: 0 };
-  const offset = sydneyOffsetHours(year, month, day);
-  return new Date(Date.UTC(year, month - 1, day, time.hour - offset, time.minute)).toISOString();
-}
-
 function mapStatus(status: string | null): OrderFormData["status"] {
   if (status === "FULFILLED") return "Done";
   if (status === "PARTIALLY_FULFILLED" || status === "IN_PROGRESS") return "Ready";
@@ -72,7 +38,9 @@ function mapPayment(status: string | null): OrderFormData["payment_status"] {
   return "Pending";
 }
 
-export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
+export type MappedShopifyOrder = Omit<OrderFormData, "delivery_date_time"> & { delivery_date_time: string | null };
+
+export function mapShopifyOrder(order: ShopifyOrder): MappedShopifyOrder {
   const custom = attributes(order);
   const productLines = order.lineItems.nodes.flatMap((item) => {
     const variant = item.variant?.title && item.variant.title !== "Default Title" ? ` — ${item.variant.title}` : "";
@@ -80,7 +48,13 @@ export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
     const optionLines = (item.variant?.selectedOptions || [])
       .filter((option) => option.name && option.value)
       .map((option) => `${option.name}: ${option.value}`);
-    return [productLine, ...optionLines];
+    // Shopify product-form fields are line-item custom attributes. Keeping
+    // them beside the product makes a flower colour unambiguous in multi-item
+    // orders, and also supports custom options added without a paid app.
+    const customOptionLines = (item.customAttributes || [])
+      .filter(({ key, value }) => key && value && !key.startsWith("_"))
+      .map(({ key, value }) => `${key}: ${value}`);
+    return [productLine, ...optionLines, ...customOptionLines];
   });
   const messageCard = attribute(custom, "messagecard", "message card", "card message");
   const deliveryInstructions = attribute(
@@ -100,8 +74,17 @@ export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
     : "";
   const delivery = attribute(custom, "delivery") || order.shippingLines.nodes[0]?.title || "delivery";
   const pickupDelivery = /pickup|pick up|store/i.test(delivery) ? "Pickup" : "Delivery";
+  const requestedDate = attribute(custom, "date", "deliverydate", "pickupdate");
+  const requestedTime = pickupDelivery === "Pickup"
+    ? attribute(custom, "pickuptime", "time", "deliverytime")
+    : attribute(custom, "deliverytime", "time", "pickuptime");
+  const deliveryDateTime = parseShopifyDeliveryDate(requestedDate, requestedTime);
+  const subtotalAmount = order.subtotalPriceSet?.shopMoney.amount;
+  const subtotal = subtotalAmount?.trim() ? Number(subtotalAmount) : NaN;
   const details = [
     ...productLines,
+    !deliveryDateTime && requestedDate ? `Requested date: ${requestedDate}` : "",
+    !deliveryDateTime && requestedTime ? `Requested time: ${requestedTime}` : "",
     messageCard ? `Message Card: ${messageCard}` : "",
     pickupDelivery === "Delivery" && address ? `Address: ${address}` : "",
     deliveryInstructions ? `Delivery Instructions: ${deliveryInstructions}` : "",
@@ -113,12 +96,12 @@ export function mapShopifyOrder(order: ShopifyOrder): OrderFormData {
     customer_id: orderCustomerId(order.name),
     details,
     status: mapStatus(order.displayFulfillmentStatus),
-    delivery_date_time: parseDeliveryDate(custom.get("date"), custom.get("pickuptime"), order.createdAt),
+    delivery_date_time: deliveryDateTime,
     pickup_delivery: pickupDelivery,
     payment_status: mapPayment(order.displayFinancialStatus),
     // Use the merchandise subtotal only. Shopify's current total includes
     // shipping (and may include taxes), which should not be copied into the
     // app's order price.
-    price: Number(order.subtotalPriceSet.shopMoney.amount) || null,
+    price: Number.isFinite(subtotal) ? subtotal : null,
   };
 }

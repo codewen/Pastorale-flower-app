@@ -1,5 +1,6 @@
 import { supabase } from "./client";
 import type { ShopifyReviewStatus, ShopifyStagedOrder } from "@/types/shopify";
+import { hasDeliveryDateTime } from "../order-date";
 
 export async function getShopifyReviewCount(): Promise<number> {
   const { count, error } = await supabase
@@ -15,7 +16,7 @@ export async function getShopifyStagedOrders(): Promise<ShopifyStagedOrder[]> {
     .from("shopify_orders")
     .select("id, shopify_order_id, order_id, customer_id, details, status, delivery_date_time, pickup_delivery, payment_status, price, review_status, raw_order, created_at, updated_at")
     .in("review_status", ["New", "In review"])
-    .order("delivery_date_time", { ascending: true });
+    .order("delivery_date_time", { ascending: true, nullsFirst: true });
   if (error) throw new Error(`Failed to load Shopify review orders: ${error.message}`);
   return (data || []) as ShopifyStagedOrder[];
 }
@@ -36,6 +37,9 @@ export async function updateShopifyStagedOrder(
 }
 
 export async function approveShopifyStagedOrder(order: ShopifyStagedOrder) {
+  if (!hasDeliveryDateTime(order.delivery_date_time)) {
+    throw new Error("Confirm a valid delivery / pickup date and time before approving this order.");
+  }
   const rawLineItems = order.raw_order && typeof order.raw_order === "object"
     ? (order.raw_order as { lineItems?: { nodes?: Array<{ image?: { url?: string } | null; variant?: { image?: { url?: string } | null; product?: { featuredImage?: { url?: string } | null } | null } | null }> } }).lineItems?.nodes || []
     : [];

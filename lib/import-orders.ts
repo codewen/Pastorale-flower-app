@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { OrderFormData } from "@/types/order";
+import { parseCsvDeliveryDate } from "./order-date";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -9,9 +10,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// CSV date/times are always treated as Australia/Sydney (UTC+11) and converted to UTC for storage.
-const SYDNEY_UTC_OFFSET_HOURS = 11;
 
 interface CSVOrderRow {
   order_id: string;
@@ -23,78 +21,6 @@ interface CSVOrderRow {
   pickup_delivery: string;
   payment_status: string;
   price: string;
-}
-
-function parseDate(dateString: string): string {
-  if (!dateString || dateString.trim() === "") {
-    const now = new Date();
-    const formatted = now.toISOString().replace("T", " ").replace(/\.\d{3}Z$/, "+00");
-    return formatted;
-  }
-
-  try {
-    // Formats: "10/25/2023 13:00:00", "10/25/2023 13:00", "2/03/2026 9:34 PM", "7/02/2026 10:00 AM"
-    const trimmed = dateString.trim();
-    const parts = trimmed.split(/\s+/);
-    if (parts.length < 2) {
-      const now = new Date();
-      return now.toISOString().replace("T", " ").replace(/\.\d{3}Z$/, "+00");
-    }
-
-    const datePart = parts[0];
-    let timePart = parts[1];
-    let amPm = parts[2]?.toUpperCase() ?? null;
-    // Also support "9:34PM" or "9:34 AM" (AM/PM may be in timePart)
-    if (!amPm && /(AM|PM)$/i.test(timePart)) {
-      amPm = timePart.slice(-2).toUpperCase();
-      timePart = timePart.slice(0, -2).trim();
-    }
-
-    const [month, day, year] = datePart.split("/").map((s) => s.trim());
-    if (!month || !day || !year) {
-      const now = new Date();
-      return now.toISOString().replace("T", " ").replace(/\.\d{3}Z$/, "+00");
-    }
-
-    const timeSegments = timePart.split(":").map((s) => s.trim());
-    const hourRaw = parseInt(timeSegments[0], 10);
-    const minuteNum = parseInt(timeSegments[1], 10) || 0;
-    const secondNum = parseInt(timeSegments[2], 10) || 0;
-
-    // 12-hour format: "9:34 PM" -> 21:34, "12:00 AM" -> 0, "12:00 PM" -> 12
-    let hourNum = hourRaw;
-    if (amPm === "AM" || amPm === "PM") {
-      if (amPm === "AM") {
-        hourNum = hourRaw === 12 ? 0 : hourRaw;
-      } else {
-        hourNum = hourRaw === 12 ? 12 : hourRaw + 12;
-      }
-    }
-
-    const yearNum = parseInt(year, 10);
-    const monthNum = parseInt(month, 10);
-    const dayNum = parseInt(day, 10);
-
-    if (Number.isNaN(yearNum) || Number.isNaN(monthNum) || Number.isNaN(dayNum) || Number.isNaN(hourNum) || Number.isNaN(minuteNum)) {
-      const now = new Date();
-      return now.toISOString().replace("T", " ").replace(/\.\d{3}Z$/, "+00");
-    }
-
-    // Build UTC moment from parsed components; if CSV is in a fixed timezone (e.g. Australia/Sydney),
-    // subtract that offset so we store true UTC and display shows correct local time.
-    let d = new Date(Date.UTC(yearNum, monthNum - 1, dayNum, hourNum, minuteNum, secondNum));
-    d = new Date(d.getTime() - SYDNEY_UTC_OFFSET_HOURS * 3600 * 1000);
-    const y = d.getUTCFullYear();
-    const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-    const dDay = String(d.getUTCDate()).padStart(2, "0");
-    const h = String(d.getUTCHours()).padStart(2, "0");
-    const min = String(d.getUTCMinutes()).padStart(2, "0");
-    const s = String(d.getUTCSeconds()).padStart(2, "0");
-    return `${y}-${m}-${dDay} ${h}:${min}:${s}+00`;
-  } catch (error) {
-    const now = new Date();
-    return now.toISOString().replace("T", " ").replace(/\.\d{3}Z$/, "+00");
-  }
 }
 
 function parsePrice(priceString: string): number | null {
@@ -179,7 +105,7 @@ export async function importOrdersFromCSV(csvData: CSVOrderRow[]): Promise<void>
         customer_id: row.customer_id || "",
         details: row.details || null,
         status: (row.status as "Ordered" | "Ready" | "Done") || "Done",
-        delivery_date_time: parseDate(row.delivery_date_time),
+        delivery_date_time: parseCsvDeliveryDate(row.delivery_date_time),
         pickup_delivery: (row.pickup_delivery as "Pickup" | "Delivery") || "Pickup",
         payment_status: (row.payment_status as "Paid" | "Unpaid" | "Pending") || "Paid",
         price: parsePrice(row.price),

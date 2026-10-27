@@ -11,7 +11,8 @@ function getSupabase() {
 
 export async function stageShopifyOrder(order: ShopifyOrder) {
   const mapped = mapShopifyOrder(order);
-  const { data, error } = await getSupabase()
+  const supabase = getSupabase();
+  const { data, error } = await supabase
     .from("shopify_orders")
     .upsert(
       {
@@ -27,12 +28,23 @@ export async function stageShopifyOrder(order: ShopifyOrder) {
         raw_order: order,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "shopify_order_id", ignoreDuplicates: false },
+      // Shopify can retry orders/create. Preserve any draft edits or approval.
+      { onConflict: "shopify_order_id", ignoreDuplicates: true },
     )
     .select()
-    .single();
+    .maybeSingle();
   if (error) throw new Error(`Failed to stage ${order.name}: ${error.message}`);
-  return data;
+  if (data) return data;
+
+  const { data: existing, error: lookupError } = await supabase
+    .from("shopify_orders")
+    .select("*")
+    .eq("shopify_order_id", order.id)
+    .single();
+  if (lookupError || !existing) {
+    throw new Error(`Failed to load staged ${order.name}: ${lookupError?.message || "Order not found"}`);
+  }
+  return existing;
 }
 
 export async function getShopifyPickupTarget(appOrderId: string): Promise<{ orderName: string; shopifyOrderId: string } | null> {

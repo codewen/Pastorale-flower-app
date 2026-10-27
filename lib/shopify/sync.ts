@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { ShopifyOrder } from "./admin-api";
 import { listShopifyOrders, getShopifyOrder } from "./admin-api";
 import { mapShopifyOrder } from "./order-mapper";
+import { hasDeliveryDateTime } from "../order-date";
 
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -20,9 +21,13 @@ export async function syncShopifyOrder(order: ShopifyOrder) {
   if (lookupError) throw new Error(`Failed to check ${order.name}: ${lookupError.message}`);
   if (existing) return { skipped: true, orderId: order.name };
 
+  const mapped = mapShopifyOrder(order);
+  if (!hasDeliveryDateTime(mapped.delivery_date_time)) {
+    throw new Error(`Order ${order.name} needs a confirmed delivery / pickup date and time in Shopify Review.`);
+  }
   const { data, error } = await supabase
     .from("orders")
-    .insert(mapShopifyOrder(order))
+    .insert(mapped)
     .select()
     .single();
   if (error) throw new Error(`Failed to sync ${order.name}: ${error.message}`);

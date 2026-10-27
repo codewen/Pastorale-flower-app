@@ -57,6 +57,8 @@ export async function approveShopifyStagedOrder(order: ShopifyStagedOrder) {
       payment_status: order.payment_status,
       is_bundled: false,
       is_made: false,
+      is_missing_flowers: false,
+      is_prepared: false,
       price: order.price,
       photos: productPhotos,
     })

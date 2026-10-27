@@ -117,6 +117,8 @@ export default function SetupPage() {
     CHECK (payment_status IN ('Paid', 'Unpaid', 'Pending')),
   is_bundled BOOLEAN NOT NULL DEFAULT FALSE,
   is_made BOOLEAN NOT NULL DEFAULT FALSE,
+  is_missing_flowers BOOLEAN NOT NULL DEFAULT FALSE,
+  is_prepared BOOLEAN NOT NULL DEFAULT FALSE,
   price NUMERIC,
   photos TEXT[] DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW(),

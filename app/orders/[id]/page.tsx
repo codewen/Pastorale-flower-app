@@ -290,7 +290,13 @@ export default function ViewOrderPage() {
           <label className="text-sm font-medium text-gray-500 block mb-0.5">
             Customer ID
           </label>
-          <p className="text-base text-gray-900">{order.customer_id}</p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="text-base text-gray-900">{order.customer_id}</p>
+            {order.is_bundled && <span className="inline-flex items-center rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800">已扎</span>}
+            {order.is_made && <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">已做</span>}
+            {order.is_missing_flowers && <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">缺花</span>}
+            {order.is_prepared && <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">已备</span>}
+          </div>
         </div>
 
         {/* 2. Details */}

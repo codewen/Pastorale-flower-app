@@ -72,12 +72,19 @@ export function mapShopifyOrder(order: ShopifyOrder): MappedShopifyOrder {
         [order.shippingAddress.province, order.shippingAddress.zip].filter(Boolean).join(" "),
       ].filter(Boolean).join(", ")
     : "";
-  // Shipping lines are selected at checkout; cart attributes can be stale when
-  // a customer switches from pickup to delivery (or vice versa) at checkout.
-  const delivery = order.shippingLines.nodes.find((line) => line.title?.trim())?.title
-    || attribute(custom, "delivery")
-    || "delivery";
-  const pickupDelivery = /pickup|pick up|store/i.test(delivery) ? "Pickup" : "Delivery";
+  // Checkout decides fulfilment. Shopify omits shippingAddress for local
+  // pickup, while the shipping-line title can be only the location name (for
+  // example "Chippendale shop") and therefore cannot reliably identify it.
+  // Cart attributes are only a fallback for older orders with no checkout data.
+  const checkoutShippingLine = order.shippingLines.nodes.find((line) => line.title?.trim())?.title;
+  const cartDelivery = attribute(custom, "delivery") || "delivery";
+  const pickupDelivery = order.shippingAddress
+    ? "Delivery"
+    : checkoutShippingLine
+      ? "Pickup"
+      : /pickup|pick up|store/i.test(cartDelivery)
+        ? "Pickup"
+        : "Delivery";
   const requestedDate = attribute(custom, "date", "deliverydate", "pickupdate");
   const requestedTime = pickupDelivery === "Pickup"
     ? attribute(custom, "pickuptime", "time", "deliverytime")

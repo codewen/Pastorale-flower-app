@@ -121,12 +121,20 @@ test('missing/invalid Shopify schedules never fall back to 13:00 or creation dat
   assert.equal(mapped.delivery_date_time, null);
 });
 
-test('delivery dates default to 1pm weekdays and 11am Saturdays, while explicit time wins', () => {
+test('delivery dates default to 1pm weekdays and 11am Saturdays', () => {
   assert.equal(parseShopifyDeliveryDateWithDefaultTime('29/10/2026'), '2026-10-29T02:00:00.000Z');
   assert.equal(parseShopifyDeliveryDateWithDefaultTime('31/10/2026'), '2026-10-31T00:00:00.000Z');
   assert.equal(parseShopifyDeliveryDateWithDefaultTime('01/11/2026'), null);
-  assert.equal(parseShopifyDeliveryDateWithDefaultTime('29/10/2026', '10am'), '2026-10-28T23:00:00.000Z');
-  assert.equal(parseShopifyDeliveryDateWithDefaultTime('29/10/2026', 'by 10am'), null);
+});
+
+test('delivery mapping ignores cart pickup time when checkout changes to delivery', () => {
+  const mapped = mapShopifyOrder(order({ customAttributes: [
+    { key: 'delivery', value: 'delivery' },
+    { key: 'date', value: '29/10/2026' },
+    { key: 'pickUpTime', value: '10:00 - 11:00' },
+  ] }));
+  assert.equal(mapped.pickup_delivery, 'Delivery');
+  assert.equal(mapped.delivery_date_time, '2026-10-29T02:00:00.000Z');
 });
 
 test('CSV rejects missing dates, invalid dates and DST ambiguity', () => {

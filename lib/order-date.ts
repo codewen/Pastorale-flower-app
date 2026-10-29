@@ -76,19 +76,14 @@ export function parseShopifyDeliveryDate(dateValue?: string, timeValue?: string)
 }
 
 /**
- * Delivery orders use the requested date with an operational default when the
- * storefront has not collected a specific time. Pickups deliberately remain
- * strict because their time window is customer-facing.
+ * Delivery orders use the requested date and an operational default. Cart
+ * pickup times are deliberately ignored here because checkout can change the
+ * fulfilment method to delivery.
  */
-export function parseShopifyDeliveryDateWithDefaultTime(dateValue?: string, timeValue?: string): string | null {
+export function parseShopifyDeliveryDateWithDefaultTime(dateValue?: string): string | null {
   if (!dateValue?.trim()) return null;
   const date = parseCalendarDate(dateValue.trim(), true);
   if (!date) return null;
-
-  if (timeValue?.trim()) {
-    const time = parseShopifyTimeRange(timeValue);
-    return time ? sydneyToUtc(date, time) : null;
-  }
 
   const weekday = new Date(Date.UTC(date.year, date.month - 1, date.day)).getUTCDay();
   const defaultHour = weekday >= 1 && weekday <= 5 ? 13 : weekday === 6 ? 11 : null;

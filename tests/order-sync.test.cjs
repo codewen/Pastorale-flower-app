@@ -43,6 +43,7 @@ for (const sample of observedSamples) {
         { key: 'date', value: sample.date },
         ...(sample.pickup ? [{ key: 'pickUpTime', value: sample.pickup }] : []),
       ],
+      shippingLines: { nodes: [{ title: sample.pickup ? 'Store Pickup' : 'Local Delivery' }] },
     }));
     assert.equal(mapped.price, Number(sample.subtotal));
     if (sample.pickup) {
@@ -135,6 +136,24 @@ test('delivery mapping ignores cart pickup time when checkout changes to deliver
   ] }));
   assert.equal(mapped.pickup_delivery, 'Delivery');
   assert.equal(mapped.delivery_date_time, '2026-10-29T02:00:00.000Z');
+});
+
+test('checkout fulfilment method overrides stale cart delivery attributes', () => {
+  const delivery = mapShopifyOrder(order({ customAttributes: [
+    { key: 'delivery', value: 'pickup' },
+    { key: 'date', value: '29/10/2026' },
+    { key: 'pickUpTime', value: '10:00 - 11:00' },
+  ], shippingLines: { nodes: [{ title: 'Local Delivery' }] } }));
+  assert.equal(delivery.pickup_delivery, 'Delivery');
+  assert.equal(delivery.delivery_date_time, '2026-10-29T02:00:00.000Z');
+
+  const pickup = mapShopifyOrder(order({ customAttributes: [
+    { key: 'delivery', value: 'delivery' },
+    { key: 'date', value: '29/10/2026' },
+    { key: 'pickUpTime', value: '10:00 - 11:00' },
+  ], shippingLines: { nodes: [{ title: 'Store Pickup' }] } }));
+  assert.equal(pickup.pickup_delivery, 'Pickup');
+  assert.equal(pickup.delivery_date_time, '2026-10-28T23:00:00.000Z');
 });
 
 test('CSV rejects missing dates, invalid dates and DST ambiguity', () => {

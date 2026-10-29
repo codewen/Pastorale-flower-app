@@ -77,9 +77,9 @@ export function mapShopifyOrder(order: ShopifyOrder): MappedShopifyOrder {
   const requestedDate = attribute(custom, "date", "deliverydate", "pickupdate");
   const requestedTime = pickupDelivery === "Pickup"
     ? attribute(custom, "pickuptime", "time", "deliverytime")
-    : attribute(custom, "deliverytime", "time", "pickuptime");
+    : undefined;
   const deliveryDateTime = pickupDelivery === "Delivery"
-    ? parseShopifyDeliveryDateWithDefaultTime(requestedDate, requestedTime)
+    ? parseShopifyDeliveryDateWithDefaultTime(requestedDate)
     : parseShopifyDeliveryDate(requestedDate, requestedTime);
   const subtotalAmount = order.subtotalPriceSet?.shopMoney.amount;
   const subtotal = subtotalAmount?.trim() ? Number(subtotalAmount) : NaN;

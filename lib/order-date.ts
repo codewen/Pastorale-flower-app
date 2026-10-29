@@ -40,6 +40,12 @@ function parseClockTime(value: string): ClockTime | null {
   return { hour, minute, second };
 }
 
+function parseShopifyTimeRange(value: string): ClockTime | null {
+  const times = value.trim().split(/\s*(?:-|–|—|\bto\b)\s*/i);
+  if (times.length > 2 || times.some((time) => !parseClockTime(time))) return null;
+  return parseClockTime(times[0]);
+}
+
 function sydneyWallClock(timestamp: number): number {
   const parts = sydneyFormatter.formatToParts(timestamp);
   const part = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((item) => item.type === type)!.value);
@@ -65,10 +71,28 @@ export function parseShopifyDeliveryDate(dateValue?: string, timeValue?: string)
   if (!dateValue?.trim() || !timeValue?.trim()) return null;
   const date = parseCalendarDate(dateValue.trim(), true);
   // A pickup window is represented by its start, as in the existing app.
-  const times = timeValue.trim().split(/\s*(?:-|–|—|\bto\b)\s*/i);
-  if (times.length > 2 || times.some((value) => !parseClockTime(value))) return null;
-  const time = parseClockTime(times[0]);
+  const time = parseShopifyTimeRange(timeValue);
   return date && time ? sydneyToUtc(date, time) : null;
+}
+
+/**
+ * Delivery orders use the requested date with an operational default when the
+ * storefront has not collected a specific time. Pickups deliberately remain
+ * strict because their time window is customer-facing.
+ */
+export function parseShopifyDeliveryDateWithDefaultTime(dateValue?: string, timeValue?: string): string | null {
+  if (!dateValue?.trim()) return null;
+  const date = parseCalendarDate(dateValue.trim(), true);
+  if (!date) return null;
+
+  if (timeValue?.trim()) {
+    const time = parseShopifyTimeRange(timeValue);
+    return time ? sydneyToUtc(date, time) : null;
+  }
+
+  const weekday = new Date(Date.UTC(date.year, date.month - 1, date.day)).getUTCDay();
+  const defaultHour = weekday >= 1 && weekday <= 5 ? 13 : weekday === 6 ? 11 : null;
+  return defaultHour === null ? null : sydneyToUtc(date, { hour: defaultHour, minute: 0, second: 0 });
 }
 
 /** Existing AppSheet CSV dates use month/day/year, with an explicit time. */

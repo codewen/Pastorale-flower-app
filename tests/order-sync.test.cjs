@@ -5,7 +5,7 @@ const React = require('react');
 const { renderToStaticMarkup } = require('react-dom/server');
 const { createLoader, root } = require('./load-typescript.cjs');
 const load = createLoader();
-const { parseCsvDeliveryDate, parseShopifyDeliveryDate, sydneyDateTimeInput } = load('lib/order-date.ts');
+const { parseCsvDeliveryDate, parseShopifyDeliveryDate, parseShopifyDeliveryDateWithDefaultTime, sydneyDateTimeInput } = load('lib/order-date.ts');
 const { mapShopifyOrder } = load('lib/shopify/order-mapper.ts');
 
 function order(overrides = {}) {
@@ -51,8 +51,12 @@ for (const sample of observedSamples) {
       assert.doesNotMatch(mapped.details, /Delivery Fee/);
     } else {
       assert.match(mapped.details, new RegExp(`Delivery Fee: ${Number(sample.shipping)}(?:\\n|$)`));
-      assert.equal(mapped.delivery_date_time, null);
-      assert.ok(mapped.details.includes(`Requested date: ${sample.date}`));
+      assert.equal(mapped.delivery_date_time, {
+        '25/09/2026': '2026-09-25T03:00:00.000Z',
+        '24/09/2026': '2026-09-24T03:00:00.000Z',
+        '21/09/2026': '2026-09-21T03:00:00.000Z',
+      }[sample.date]);
+      assert.doesNotMatch(mapped.details, /Requested date:/);
     }
   });
 }
@@ -115,6 +119,14 @@ test('missing/invalid Shopify schedules never fall back to 13:00 or creation dat
   assert.equal(parseShopifyDeliveryDate('2026-09-25', '10am – 11am'), '2026-09-25T00:00:00.000Z');
   const mapped = mapShopifyOrder(order({ customAttributes: [] }));
   assert.equal(mapped.delivery_date_time, null);
+});
+
+test('delivery dates default to 1pm weekdays and 11am Saturdays, while explicit time wins', () => {
+  assert.equal(parseShopifyDeliveryDateWithDefaultTime('29/10/2026'), '2026-10-29T02:00:00.000Z');
+  assert.equal(parseShopifyDeliveryDateWithDefaultTime('31/10/2026'), '2026-10-31T00:00:00.000Z');
+  assert.equal(parseShopifyDeliveryDateWithDefaultTime('01/11/2026'), null);
+  assert.equal(parseShopifyDeliveryDateWithDefaultTime('29/10/2026', '10am'), '2026-10-28T23:00:00.000Z');
+  assert.equal(parseShopifyDeliveryDateWithDefaultTime('29/10/2026', 'by 10am'), null);
 });
 
 test('CSV rejects missing dates, invalid dates and DST ambiguity', () => {
@@ -243,7 +255,7 @@ test('actual webhook -> GraphQL reader -> mapper -> staging writes correct value
       const saved = writes.at(-1);
       assert.ok(saved.details.includes(`Delivery Fee: ${Number(amount)}`));
       assert.equal(saved.price, 100);
-      assert.equal(saved.delivery_date_time, null);
+      assert.equal(saved.delivery_date_time, '2026-09-25T03:00:00.000Z');
       assert.equal(saved.raw_order.id, source.id);
     }
     const before = writes.length;

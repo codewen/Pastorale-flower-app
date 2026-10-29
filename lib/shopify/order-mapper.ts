@@ -1,6 +1,6 @@
 import type { OrderFormData } from "@/types/order";
 import type { ShopifyOrder } from "./admin-api";
-import { parseShopifyDeliveryDate } from "../order-date";
+import { parseShopifyDeliveryDate, parseShopifyDeliveryDateWithDefaultTime } from "../order-date";
 
 function attributes(order: ShopifyOrder): Map<string, string> {
   return new Map(order.customAttributes.map(({ key, value }) => [key.trim().toLowerCase().replace(/[^a-z0-9]/g, ""), value.trim()]));
@@ -78,7 +78,9 @@ export function mapShopifyOrder(order: ShopifyOrder): MappedShopifyOrder {
   const requestedTime = pickupDelivery === "Pickup"
     ? attribute(custom, "pickuptime", "time", "deliverytime")
     : attribute(custom, "deliverytime", "time", "pickuptime");
-  const deliveryDateTime = parseShopifyDeliveryDate(requestedDate, requestedTime);
+  const deliveryDateTime = pickupDelivery === "Delivery"
+    ? parseShopifyDeliveryDateWithDefaultTime(requestedDate, requestedTime)
+    : parseShopifyDeliveryDate(requestedDate, requestedTime);
   const subtotalAmount = order.subtotalPriceSet?.shopMoney.amount;
   const subtotal = subtotalAmount?.trim() ? Number(subtotalAmount) : NaN;
   const details = [

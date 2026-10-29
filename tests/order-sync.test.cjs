@@ -15,7 +15,9 @@ function order(overrides = {}) {
     subtotalPriceSet: { shopMoney: { amount: '100.00' } },
     currentTotalPriceSet: { shopMoney: { amount: '135.00' } },
     currentShippingPriceSet: { shopMoney: { amount: '35.00' } },
-    customer: null, shippingAddress: null, note: null,
+    customer: null,
+    shippingAddress: { address1: '1 Delivery Street', address2: null, city: 'Sydney', province: 'NSW', zip: '2000', country: 'Australia' },
+    note: null,
     customAttributes: [{ key: 'delivery', value: 'delivery' }, { key: 'date', value: '25/09/2026' }],
     lineItems: { nodes: [{ title: 'Bouquet', quantity: 1, image: null, customAttributes: [], variant: null }] },
     shippingLines: { nodes: [{ title: 'Local Delivery' }] }, ...overrides,
@@ -44,6 +46,7 @@ for (const sample of observedSamples) {
         ...(sample.pickup ? [{ key: 'pickUpTime', value: sample.pickup }] : []),
       ],
       shippingLines: { nodes: [{ title: sample.pickup ? 'Store Pickup' : 'Local Delivery' }] },
+      ...(sample.pickup ? { shippingAddress: null } : {}),
     }));
     assert.equal(mapped.price, Number(sample.subtotal));
     if (sample.pickup) {
@@ -151,9 +154,26 @@ test('checkout fulfilment method overrides stale cart delivery attributes', () =
     { key: 'delivery', value: 'delivery' },
     { key: 'date', value: '29/10/2026' },
     { key: 'pickUpTime', value: '10:00 - 11:00' },
-  ], shippingLines: { nodes: [{ title: 'Store Pickup' }] } }));
+  ], shippingLines: { nodes: [{ title: 'Store Pickup' }] }, shippingAddress: null }));
   assert.equal(pickup.pickup_delivery, 'Pickup');
   assert.equal(pickup.delivery_date_time, '2026-10-28T23:00:00.000Z');
+});
+
+test('checkout pickup is identified when Shopify uses only the pickup location as its shipping line title', () => {
+  // Shopify order #7645: the Admin UI showed "Pickup in store at Chippendale
+  // shop", no shipping address, and a shipping line titled "Chippendale shop".
+  const mapped = mapShopifyOrder(order({
+    customAttributes: [
+      { key: 'delivery', value: 'pickup' },
+      { key: 'date', value: '30/10/2026' },
+      { key: 'pickUpTime', value: '10:00 - 11:00' },
+    ],
+    shippingAddress: null,
+    shippingLines: { nodes: [{ title: 'Chippendale shop' }] },
+  }));
+  assert.equal(mapped.pickup_delivery, 'Pickup');
+  assert.equal(mapped.delivery_date_time, '2026-10-29T23:00:00.000Z');
+  assert.doesNotMatch(mapped.details, /Delivery Fee/);
 });
 
 test('CSV rejects missing dates, invalid dates and DST ambiguity', () => {

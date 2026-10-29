@@ -72,7 +72,11 @@ export function mapShopifyOrder(order: ShopifyOrder): MappedShopifyOrder {
         [order.shippingAddress.province, order.shippingAddress.zip].filter(Boolean).join(" "),
       ].filter(Boolean).join(", ")
     : "";
-  const delivery = attribute(custom, "delivery") || order.shippingLines.nodes[0]?.title || "delivery";
+  // Shipping lines are selected at checkout; cart attributes can be stale when
+  // a customer switches from pickup to delivery (or vice versa) at checkout.
+  const delivery = order.shippingLines.nodes.find((line) => line.title?.trim())?.title
+    || attribute(custom, "delivery")
+    || "delivery";
   const pickupDelivery = /pickup|pick up|store/i.test(delivery) ? "Pickup" : "Delivery";
   const requestedDate = attribute(custom, "date", "deliverydate", "pickupdate");
   const requestedTime = pickupDelivery === "Pickup"

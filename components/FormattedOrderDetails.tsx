@@ -101,24 +101,33 @@ export function FormattedOrderDetails({
         const copyKey = `${isMessageCard ? "message" : "address"}-${index}`;
 
         return (
-          <p key={index} className="whitespace-pre-wrap">
-            <strong className="font-semibold text-gray-900">{line.slice(0, separator + 1)}</strong>
-            {copyValue && (
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  void copyText(copyValue, copyKey);
-                }}
-                className="ml-2 inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 align-middle text-xs font-medium text-gray-700 hover:bg-gray-50"
-                aria-label={isMessageCard ? "Copy message card" : "Copy delivery address"}
-              >
-                {copiedKey === copyKey ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
-                {copiedKey === copyKey ? "已复制" : "复制"}
-              </button>
+          <div key={index} className={isAddress ? "space-y-1" : undefined}>
+            {isAddress && (recipientName || recipientPhone) && (
+              <p className="text-gray-900">
+                <strong className="font-semibold">Recipient:</strong>
+                {recipientName ? ` ${recipientName}` : ""}
+                {recipientPhone ? ` · ${recipientPhone}` : ""}
+              </p>
             )}
-            {value ? ` ${value}` : ""}
-          </p>
+            <p className="whitespace-pre-wrap">
+              <strong className="font-semibold text-gray-900">{line.slice(0, separator + 1)}</strong>
+              {copyValue && (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    void copyText(copyValue, copyKey);
+                  }}
+                  className="ml-2 inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-1.5 py-0.5 align-middle text-xs font-medium text-gray-700 hover:bg-gray-50"
+                  aria-label={isMessageCard ? "Copy message card" : "Copy delivery address"}
+                >
+                  {copiedKey === copyKey ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copiedKey === copyKey ? "已复制" : "复制"}
+                </button>
+              )}
+              {value ? ` ${value}` : ""}
+            </p>
+          </div>
         );
       })}
     </div>

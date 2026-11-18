@@ -305,7 +305,15 @@ export default function ViewOrderPage() {
             <label className="text-sm font-medium text-gray-500 block mb-0.5">
               Details
             </label>
-            <FormattedOrderDetails details={order.details} className="text-base text-gray-900" />
+            <FormattedOrderDetails
+              details={order.details}
+              className="text-base text-gray-900"
+              orderId={order.order_id}
+              recipientName={order.recipient_name}
+              recipientPhone={order.recipient_phone}
+              deliveryAddressLine1={order.delivery_address_line_1}
+              deliveryAddressLine2={order.delivery_address_line_2}
+            />
           </div>
         )}
 

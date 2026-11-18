@@ -14,7 +14,7 @@ export async function getShopifyReviewCount(): Promise<number> {
 export async function getShopifyStagedOrders(): Promise<ShopifyStagedOrder[]> {
   const { data, error } = await supabase
     .from("shopify_orders")
-    .select("id, shopify_order_id, order_id, customer_id, details, status, delivery_date_time, pickup_delivery, payment_status, price, review_status, raw_order, created_at, updated_at")
+    .select("id, shopify_order_id, order_id, customer_id, recipient_name, recipient_phone, delivery_address_line_1, delivery_address_line_2, details, status, delivery_date_time, pickup_delivery, payment_status, price, review_status, raw_order, created_at, updated_at")
     .in("review_status", ["New", "In review"])
     .order("delivery_date_time", { ascending: true, nullsFirst: true });
   if (error) throw new Error(`Failed to load Shopify review orders: ${error.message}`);
@@ -50,6 +50,10 @@ export async function approveShopifyStagedOrder(order: ShopifyStagedOrder) {
       source: "shopify_import",
       order_id: order.order_id,
       customer_id: order.customer_id,
+      recipient_name: order.recipient_name,
+      recipient_phone: order.recipient_phone,
+      delivery_address_line_1: order.delivery_address_line_1,
+      delivery_address_line_2: order.delivery_address_line_2,
       details: order.details,
       status: order.status,
       delivery_date_time: order.delivery_date_time,

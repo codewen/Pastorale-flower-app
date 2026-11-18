@@ -18,6 +18,9 @@ export interface ShopifyOrder {
   currentShippingPriceSet: { shopMoney: { amount: string } };
   customer: { id: string; email: string | null } | null;
   shippingAddress: {
+    firstName: string | null;
+    lastName: string | null;
+    phone: string | null;
     address1: string | null;
     address2: string | null;
     city: string | null;
@@ -65,7 +68,7 @@ const ORDER_FIELDS = `
   currentTotalPriceSet { shopMoney { amount } }
   currentShippingPriceSet { shopMoney { amount } }
   customer { id email }
-  shippingAddress { address1 address2 city province zip country }
+  shippingAddress { firstName lastName phone address1 address2 city province zip country }
   note
   customAttributes { key value }
   lineItems(first: 100) {

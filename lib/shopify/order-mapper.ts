@@ -38,7 +38,13 @@ function mapPayment(status: string | null): OrderFormData["payment_status"] {
   return "Pending";
 }
 
-export type MappedShopifyOrder = Omit<OrderFormData, "delivery_date_time"> & { delivery_date_time: string | null };
+export type MappedShopifyOrder = Omit<OrderFormData, "delivery_date_time"> & {
+  delivery_date_time: string | null;
+  recipient_name: string | null;
+  recipient_phone: string | null;
+  delivery_address_line_1: string | null;
+  delivery_address_line_2: string | null;
+};
 
 export function mapShopifyOrder(order: ShopifyOrder): MappedShopifyOrder {
   const custom = attributes(order);
@@ -64,14 +70,19 @@ export function mapShopifyOrder(order: ShopifyOrder): MappedShopifyOrder {
     "delivery_instruction",
     "delivery instruction",
   ) || instructionAttribute(custom) || order.note?.trim();
-  const address = order.shippingAddress
+  const recipientName = order.shippingAddress
+    ? [order.shippingAddress.firstName, order.shippingAddress.lastName].filter(Boolean).join(" ")
+    : "";
+  const recipientPhone = order.shippingAddress?.phone?.trim() || "";
+  const addressLine1 = order.shippingAddress?.address1?.trim() || "";
+  const addressLine2 = order.shippingAddress
     ? [
-        order.shippingAddress.address1,
         order.shippingAddress.address2,
-        order.shippingAddress.city,
-        [order.shippingAddress.province, order.shippingAddress.zip].filter(Boolean).join(" "),
+        [order.shippingAddress.city, order.shippingAddress.province, order.shippingAddress.zip].filter(Boolean).join(" "),
+        order.shippingAddress.country,
       ].filter(Boolean).join(", ")
     : "";
+  const address = [addressLine1, addressLine2].filter(Boolean).join(", ");
   // Checkout decides fulfilment. Shopify omits shippingAddress for local
   // pickup, while the shipping-line title can be only the location name (for
   // example "Chippendale shop") and therefore cannot reliably identify it.
@@ -120,5 +131,9 @@ export function mapShopifyOrder(order: ShopifyOrder): MappedShopifyOrder {
     // shipping (and may include taxes), which should not be copied into the
     // app's order price.
     price: Number.isFinite(subtotal) ? subtotal : null,
+    recipient_name: recipientName || null,
+    recipient_phone: recipientPhone || null,
+    delivery_address_line_1: addressLine1 || null,
+    delivery_address_line_2: addressLine2 || null,
   };
 }

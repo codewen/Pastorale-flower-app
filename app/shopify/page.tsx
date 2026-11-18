@@ -12,6 +12,8 @@ export default function ShopifyReviewPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [testOrderNumber, setTestOrderNumber] = useState("");
+  const [syncingTestOrder, setSyncingTestOrder] = useState(false);
 
   const load = async () => {
     try {
@@ -74,6 +76,26 @@ export default function ShopifyReviewPage() {
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not reject order"); }
   };
 
+  const syncExistingOrderForReview = async () => {
+    try {
+      setSyncingTestOrder(true);
+      const response = await fetch("/api/shopify/review-sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderNumber: testOrderNumber }),
+      });
+      const result = await response.json() as { error?: string; orderName?: string; reviewStatus?: string };
+      if (!response.ok) throw new Error(result.error || "Could not stage this Shopify order");
+      setMessage(`${result.orderName} loaded from Shopify (${result.reviewStatus}).`);
+      setTestOrderNumber("");
+      await load();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not stage this Shopify order");
+    } finally {
+      setSyncingTestOrder(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white">
@@ -88,6 +110,27 @@ export default function ShopifyReviewPage() {
       </header>
       <main className="mx-auto max-w-4xl space-y-4 p-4">
         {message && <div className="rounded-lg bg-blue-50 p-3 text-sm text-blue-800">{message}</div>}
+        <section className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3">
+          <p className="text-sm font-medium text-slate-800">Test an existing Shopify order</p>
+          <p className="mt-1 text-xs text-slate-600">Reads one existing order into Review only. It never edits Shopify or adds it to daily orders automatically.</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <input
+              value={testOrderNumber}
+              onChange={(event) => setTestOrderNumber(event.target.value)}
+              placeholder="#7645"
+              className="w-28 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
+              aria-label="Shopify order number to test"
+            />
+            <button
+              type="button"
+              onClick={() => void syncExistingOrderForReview()}
+              disabled={syncingTestOrder || !testOrderNumber.trim()}
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {syncingTestOrder ? "Loading…" : "Load into review"}
+            </button>
+          </div>
+        </section>
         {loading ? <div className="py-12 text-center text-gray-500">Loading Shopify orders…</div> : null}
         {!loading && orders.length === 0 ? <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center text-gray-500">No Shopify orders waiting for review.</div> : null}
         {orders.map((order) => {
@@ -110,7 +153,15 @@ export default function ShopifyReviewPage() {
               <div className="mt-3 grid gap-2 text-sm text-gray-600 sm:grid-cols-3"><span>{order.pickup_delivery}</span><span>{dateTimeConfirmed ? `${new Date(order.delivery_date_time!).toLocaleString("en-AU", { timeZone: "Australia/Sydney" })} (Sydney)` : "Date / time needs confirmation"}</span><span>{order.price == null ? "Price pending" : `$${Number(order.price).toFixed(2)}`}</span></div>
               {!dateTimeConfirmed && <p className="mt-2 text-sm text-amber-800">Confirm the delivery / pickup date and time before adding this order to daily work.</p>}
               {order.details
-                ? <FormattedOrderDetails details={order.details} className="mt-3 text-sm text-gray-800" />
+                ? <FormattedOrderDetails
+                    details={order.details}
+                    className="mt-3 text-sm text-gray-800"
+                    orderId={order.order_id}
+                    recipientName={order.recipient_name}
+                    recipientPhone={order.recipient_phone}
+                    deliveryAddressLine1={order.delivery_address_line_1}
+                    deliveryAddressLine2={order.delivery_address_line_2}
+                  />
                 : <p className="mt-3 text-sm text-gray-800">No product details</p>}
               {(() => {
                 const items = order.raw_order && typeof order.raw_order === "object"

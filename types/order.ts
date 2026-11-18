@@ -8,6 +8,10 @@ export interface Order {
   source: OrderSource;
   order_id: string;
   customer_id: string;
+  recipient_name: string | null;
+  recipient_phone: string | null;
+  delivery_address_line_1: string | null;
+  delivery_address_line_2: string | null;
   details: string | null;
   status: OrderStatus;
   delivery_date_time: string;

@@ -16,7 +16,10 @@ function order(overrides = {}) {
     currentTotalPriceSet: { shopMoney: { amount: '135.00' } },
     currentShippingPriceSet: { shopMoney: { amount: '35.00' } },
     customer: null,
-    shippingAddress: { address1: '1 Delivery Street', address2: null, city: 'Sydney', province: 'NSW', zip: '2000', country: 'Australia' },
+    shippingAddress: {
+      firstName: 'Kathryn', lastName: 'Murray', phone: '+61 416 438 983',
+      address1: '4/50-54 Macpherson Street', address2: null, city: 'Bronte', province: 'NSW', zip: '2024', country: 'Australia',
+    },
     note: null,
     customAttributes: [{ key: 'delivery', value: 'delivery' }, { key: 'date', value: '25/09/2026' }],
     lineItems: { nodes: [{ title: 'Bouquet', quantity: 1, image: null, customAttributes: [], variant: null }] },
@@ -93,6 +96,44 @@ test('line-item flower colour is retained in the synced order details', () => {
   }));
   assert.match(mapped.details, /Rose Bouquet\nFlower Colour: Blush Pink/);
   assert.doesNotMatch(mapped.details, /internal/);
+});
+
+test('Shopify delivery contact is split into a recipient, phone and two printable address lines', () => {
+  const mapped = mapShopifyOrder(order());
+  assert.equal(mapped.recipient_name, 'Kathryn Murray');
+  assert.equal(mapped.recipient_phone, '+61 416 438 983');
+  assert.equal(mapped.delivery_address_line_1, '4/50-54 Macpherson Street');
+  assert.equal(mapped.delivery_address_line_2, 'Bronte NSW 2024, Australia');
+  assert.match(mapped.details, /Address: 4\/50-54 Macpherson Street, Bronte NSW 2024, Australia/);
+
+  const pickup = mapShopifyOrder(order({ shippingAddress: null }));
+  assert.equal(pickup.recipient_name, null);
+  assert.equal(pickup.recipient_phone, null);
+  assert.equal(pickup.delivery_address_line_1, null);
+  assert.equal(pickup.delivery_address_line_2, null);
+});
+
+test('multi-line message cards place the copy button immediately after the label', () => {
+  const { FormattedOrderDetails } = load('components/FormattedOrderDetails.tsx');
+  const markup = renderToStaticMarkup(React.createElement(FormattedOrderDetails, {
+    details: 'Small Wrapped Flowers\nMessage Card: Happy birthday!\nLove, Jinny\nDelivery Fee: 0',
+  }));
+  assert.ok(markup.indexOf('Message Card:') < markup.indexOf('复制'));
+  assert.ok(markup.indexOf('复制') < markup.indexOf('Love, Jinny'));
+});
+
+test('delivery address gets a copy button only when synced contact fields can make a complete label', () => {
+  const { FormattedOrderDetails } = load('components/FormattedOrderDetails.tsx');
+  const markup = renderToStaticMarkup(React.createElement(FormattedOrderDetails, {
+    details: 'Address: 4/50-54 Macpherson Street, Bronte NSW 2024, Australia',
+    orderId: '#7645',
+    recipientName: 'Kathryn Murray',
+    recipientPhone: '+61 416 438 983',
+    deliveryAddressLine1: '4/50-54 Macpherson Street',
+    deliveryAddressLine2: 'Bronte NSW 2024, Australia',
+  }));
+  assert.ok(markup.indexOf('Address:') < markup.indexOf('复制'));
+  assert.match(markup, /aria-label="Copy delivery address"/);
 });
 
 test('CSV uses Sydney winter and summer offsets, including midnight and seconds', () => {
@@ -286,6 +327,7 @@ test('actual webhook -> GraphQL reader -> mapper -> staging writes correct value
     global.fetch = async (url, init) => {
       assert.equal(url, 'https://sync-test.myshopify.com/admin/api/2026-07/graphql.json');
       assert.match(JSON.parse(init.body).query, /currentShippingPriceSet\s*\{\s*shopMoney\s*\{\s*amount/);
+      assert.match(JSON.parse(init.body).query, /shippingAddress\s*\{\s*firstName\s+lastName\s+phone/);
       return new Response(JSON.stringify({ data: { order: source } }));
     };
     const request = (signature, topic = 'orders/create') => {
@@ -303,6 +345,10 @@ test('actual webhook -> GraphQL reader -> mapper -> staging writes correct value
       assert.ok(saved.details.includes(`Delivery Fee: ${Number(amount)}`));
       assert.equal(saved.price, 100);
       assert.equal(saved.delivery_date_time, '2026-09-25T03:00:00.000Z');
+      assert.equal(saved.recipient_name, 'Kathryn Murray');
+      assert.equal(saved.recipient_phone, '+61 416 438 983');
+      assert.equal(saved.delivery_address_line_1, '4/50-54 Macpherson Street');
+      assert.equal(saved.delivery_address_line_2, 'Bronte NSW 2024, Australia');
       assert.equal(saved.raw_order.id, source.id);
     }
     const before = writes.length;
